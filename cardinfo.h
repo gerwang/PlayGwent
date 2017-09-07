@@ -6,7 +6,7 @@
 #include <QObject>
 #include <QJsonObject>
 
-class CardInfo : QObject {
+class CardInfo : public QObject {
 Q_OBJECT
 public:
     CardInfo();
@@ -14,6 +14,8 @@ public:
     void fromJsonFile(const QString &fileName);
 
     void readFromJson(const QJsonObject &json);
+
+    static CardInfo *createByName(const QString &name);
 
     void writeToJson(QJsonObject &json) const;
 

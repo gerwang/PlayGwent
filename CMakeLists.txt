@@ -20,8 +20,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set(SOURCE_FILES
         main.cpp
         ConsoleWindow.cpp
-        AbstractUI.cpp AbstractUI.h
-        cardinfo.cpp ConsoleView.cpp ConsoleView.h GameController.cpp GameController.h GameAssets.cpp GameAssets.h GameConstant.h SubclassRegister.cpp SubclassRegister.h)
+        AbstractUI.h
+        cardinfo.cpp
+        ConsoleView.cpp
+        ConsoleView.h
+        GameController.cpp
+        GameController.h
+        GameAssets.cpp
+        GameAssets.h
+        GameConstant.h
+        SubclassRegister.cpp
+        SubclassRegister.h
+        AbstractIOBuffer.h
+        ConsoleIOBuffer.cpp
+        ConsoleIOBuffer.h)
 add_executable(PlayGwent ${SOURCE_FILES})
 
 target_link_libraries(PlayGwent Qt5::Widgets Qt5::Core)

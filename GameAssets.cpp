@@ -3,6 +3,7 @@
 //
 
 #include "GameAssets.h"
+#include <QDebug>
 
 bool GameAssets::getPlayerPass(int player) {
     return playerPass[player];
@@ -24,11 +25,11 @@ void GameAssets::setPlayerWinRound(int player, int winRound) {
     playerWinRound[player] = winRound;
 }
 
-AbstractUI::Weather GameAssets::getRowWeather(int row) {
+Weather GameAssets::getRowWeather(int row) {
     return rowWeather[row];
 }
 
-void GameAssets::setRowWeather(int row, AbstractUI::Weather weather) {
+void GameAssets::setRowWeather(int row, Weather weather) {
     rowWeather[row] = weather;
 }
 
@@ -41,9 +42,10 @@ void GameAssets::setPlayerName(int player, const QString &name) {
 }
 
 bool GameAssets::isGameEnd() {
-    return playerWinRound[0] < 2 &&//player0 don't win
-           playerWinRound[1] < 2 &&//player1 don't win
-           playerWinRound[0] + playerWinRound[1] < 3;//not draw
+    return playerWinRound[0] >= 2 ||//player0  win
+           playerWinRound[1] >= 2 ||//player1  win
+           currentRound >= 3;
+    //           playerWinRound[0] + playerWinRound[1] < 3;//not draw WRONG!
 }
 
 int GameAssets::getPlayerScore(int player, int round) {
@@ -62,24 +64,16 @@ void GameAssets::setRandomSeed(unsigned int randomSeed) {
     GameAssets::randomSeed = randomSeed;
 }
 
-int GameAssets::getWinner(int round) {
-    return winner[round];
-}
-
-void GameAssets::setWinner(int round, int player) {//player can be -1
-    winner[round] = player;
-}
-
 void GameAssets::resetRandomSeed() {
     qsrand(randomSeed);
 }
 
-bool GameAssets::isNeedChooseCard() const {
-    return needChooseCard;
+bool GameAssets::isRoundStart() const {
+    return roundStart;
 }
 
-void GameAssets::setNeedChooseCard(bool needChooseCard) {
-    GameAssets::needChooseCard = needChooseCard;
+void GameAssets::setRoundStart(bool start) {
+    GameAssets::roundStart = start;
 }
 
 int GameAssets::getPreviousWinner() const {
@@ -222,6 +216,67 @@ bool GameAssets::isHandled() const {
 
 void GameAssets::setHandled(bool handled) {
     GameAssets::handled = handled;
+}
+
+int GameAssets::getRowCombatValueSum(int row) {
+    int sum = 0;
+    for (auto card:cardarray[row]) {
+        sum += card->getCurrentStrength();
+    }
+    return sum;
+}
+
+int GameAssets::getPlayerCombatValueSum(int player) {
+    int sum = 0;
+    if (player == 0) {
+        for (int row = Player0_Melee; row <= Player0_Siege; row++) {
+            sum += getRowCombatValueSum(row);
+        }
+    } else if (player == 1) {
+        for (int row = Player1_Siege; row <= Player1_Melee; row++) {
+            sum += getRowCombatValueSum(row);
+        }
+    }
+    return sum;
+}
+
+void GameAssets::addPlayerWinRound(int player) {
+    playerWinRound[player]++;
+}
+
+void GameAssets::addCurrentRound() {
+    currentRound++;
+}
+
+void GameAssets::clearWeatherOnAllRows() {
+    for (int i = 0; i < ROW_NUM; i++) {
+        rowWeather[i] = Weather::Sunny;
+    }
+}
+
+void GameAssets::clearAllGameRows() {
+    for (int row = Player1_Graveyard; row <= Player0_Graveyard; row++) {
+        cardarray[row].clear();
+    }
+}
+
+void GameAssets::loadPlayerDeck(const QList<QString> &zeroNameList,
+                                const QList<QString> &oneNameList) {
+    clearAllGameRows();
+    resetRandomSeed();//set random seed, no need to synchosize random bahavior
+    createCardsRandomlyOnNameListToRow(zeroNameList, Player0_Deck);
+    createCardsRandomlyOnNameListToRow(oneNameList, Player1_Deck);
+}
+
+void GameAssets::createCardsRandomlyOnNameListToRow(QList<QString> namelist, int row) {
+    //randomize
+    int n = namelist.size();
+    for (int index = 0; index < n; index++) {
+        int otherIndex = index + qrand() % (n - index);//range [index,n-1]
+        std::swap(namelist[index], namelist[otherIndex]);//correct random algorithm
+        cardarray[row].append(CardInfo::createByName(namelist[index]));//allocate NEW memory!
+        //WARNING: FIND BUG: cardarray means &cardarray[0]!!
+    }
 }
 
 //you should always perform MOVE instead of REMOVE, case REMOVE is a really serios thing

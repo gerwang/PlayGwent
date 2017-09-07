@@ -5,9 +5,9 @@
 #ifndef PLAYGWENT_GAMECONSTANT_H_H
 #define PLAYGWENT_GAMECONSTANT_H_H
 
-const int ROW_NUM = 16;//the num of row on battlefield
+const int ROW_NUM = 22;//the num of row on battlefield
 
-const QString cardslotMsg[ROW_NUM] =
+const QString CardSlotMSG[ROW_NUM] =
         {
                 "player1_graveyard",//0
                 "player1_deck",//1
@@ -20,8 +20,31 @@ const QString cardslotMsg[ROW_NUM] =
                 "player0_siege",//8
                 "player0_hand",//9
                 "player0_deck",//10
-                "player0_graveyard"//11
+                "player0_graveyard", //11
+
+                "Player1_Candidate",//12
+                "Player1_Seleted",// 13,
+
+                "Player0_Candidate",//14,
+                "Player0_Seleted",// 15,
+
+                "DeckBuilder_Candidate",// 16,
+                "DeckBuilder_NoHP",// 17,
+                "DeckBuilder_Siege",// 18,
+                "DeckBuilder_Ranged",// 19,
+                "DeckBuilder_Melee_Event",// 20,
+
+                "Main_Menu"// 21
         };
+
+const QString SceneMSG[5] = {
+        "MainMenuScene", "GameScene", "DeckBuilderScene", "Player0ChooserScene", "Player1ChooserScene"
+};
+
+const QString InputStateMSG[3] = {
+        "RejectAll", "MustValidTarget", "MustValidRow"
+};
+
 const int NumberToRedraw[3] = {3, 1, 1};
 const int NumberToChoose[3] = {10, 2, 1};
 
@@ -75,6 +98,13 @@ enum TextLabelEnum {
     Label_Bronze_DeckBuilder = 19
 };
 
+const int RoundEndDuration = 3000, GameEndDuration = 6000;//the duration of messagebox presented in msec
+
+const int BUTTON_NUM = 4, LABEL_NUM = 20;
+
+enum class Weather {
+    Sunny, Rainy, Foggy, Frozen
+};
 //TODO there should be a linkedit to edit the deck name
 
 #endif //PLAYGWENT_GAMECONSTANT_H_H

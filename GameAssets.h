@@ -8,15 +8,17 @@
 
 #include <QtCore/QObject>
 #include "cardinfo.h"
-#include "AbstractUI.h"
 #include "GameConstant.h"
+#include <algorithm>
 
 class GameAssets : public QObject {//store all the info's that are on the game logic
 Q_OBJECT
 public:
     bool isGameEnd();
+    //if the game ends
 
     bool getPlayerPass(int player);
+    //if player has passed this round
 
     void setPlayerPass(int player, bool pass);
 
@@ -26,9 +28,9 @@ public:
 
     void setPlayerWinRound(int player, int winRound);
 
-    AbstractUI::Weather getRowWeather(int row);
+    Weather getRowWeather(int row);
 
-    void setRowWeather(int row, AbstractUI::Weather weather);
+    void setRowWeather(int row, Weather weather);
 
     const QString &getPlayerName(int player);
 
@@ -40,26 +42,11 @@ public:
 
     void setPlayerScore(int player, int round, int score);
 
-    int getWinner(int round);
-
-    void setWinner(int round, int player);
-
     void resetRandomSeed();//flush the random seed
 
-private:
-    QList<CardInfo *> cardarray[ROW_NUM];
-    AbstractUI::Weather rowWeather[ROW_NUM];
-    int playerWinRound[2];//the number of round that player has won
-    bool playerPass[2];
-    QString playerName[2];
-    int playerScore[2][3];
-    int winner[3];//-1 if draw
-    unsigned randomSeed;
+    bool isRoundStart() const;
 
-public:
-    bool isNeedChooseCard() const;
-
-    void setNeedChooseCard(bool needChooseCard);
+    void setRoundStart(bool start);
 
     int getPreviousWinner() const;
 
@@ -69,9 +56,9 @@ public:
 
     void setCurrentPlayer(int currentPlayer);
 
-    bool isBattleField(int row);
+    static bool isBattleField(int row);
 
-    bool isGraveyard(int row);
+    static bool isGraveyard(int row);
 
     static int
     findTopmostANameNotInB(const QList<CardInfo *> &a, const QList<CardInfo *> &b);//return -1 if all a's names are in b
@@ -82,24 +69,14 @@ public:
 
     bool isAllPlayerPass();
 
-private:
-    //some psedu-local variable for game looping
-    bool needChooseCard;
-    int previousWinner;
-    int currentPlayer;
-    int currentRound;
-    bool handled;
-public:
     bool isHandled() const;
 
     void setHandled(bool handled);
 
-public:
     int getCurrentRound() const;
 
     void setCurrentRound(int currentRound);
 
-public:
     unsigned int getRandomSeed() const;
 
     void setRandomSeed(unsigned int randomSeed);
@@ -119,6 +96,39 @@ public:
     void getCardPosition(CardInfo *card, int &row, int &column);
 
     void moveCardPosToPos(int fromR, int fromC, int toR, int toC);
+
+    int getRowCombatValueSum(int row);
+
+    int getPlayerCombatValueSum(int player);
+
+    void addPlayerWinRound(int player);
+
+    void addCurrentRound();
+
+    void clearWeatherOnAllRows();
+
+    void clearAllGameRows();
+
+    void loadPlayerDeck(const QList<QString> &zeroNameList,
+                        const QList<QString> &oneNameList);
+
+    void createCardsRandomlyOnNameListToRow(QList<QString> namelist, int row);
+
+private:
+    //some psedu-local variable for game looping
+    bool roundStart;
+    int previousWinner;
+    int currentPlayer;
+    int currentRound;
+    bool handled;
+
+    QList<CardInfo *> cardarray[ROW_NUM];
+    Weather rowWeather[ROW_NUM];
+    int playerWinRound[2];//the number of round that player has won
+    bool playerPass[2];
+    QString playerName[2];
+    int playerScore[2][3];
+    unsigned randomSeed;
 };
 
 

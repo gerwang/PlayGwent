@@ -5,49 +5,65 @@
 #include "GameController.h"
 #include <QFutureWatcher>
 
-GameAssets *GameController::getAssets() {
-    return assets;
-}
-
-AbstractUI *GameController::getUI() {
-    return gameUI;
-}
-
-GameController *GameController::getController() {
-    if (mainController == nullptr) {
-        mainController = new GameController();
-    }
-    return mainController;
-}
-
-void GameController::loadUIfromAssets() {
-    //TODO
-}
-
 template<typename T>
 void GameController::registerProcessor(T *childProcessor) {
-    //TODO
-
+    connect(this, &GameController::afterMoveForUser, childProcessor, &T::slotAfterMoveForUser);
+    connect(this, &GameController::beforeMoveForUser, childProcessor, &T::slotBeforeMoveForUser);
+    connect(this, &GameController::beforeDeploy, childProcessor, &T::slotBeforeDeploy);
+    connect(this, &GameController::onDeploy, childProcessor, &T::slotOnDeploy);
+    connect(this, &GameController::onDeathWish, childProcessor, &T::slotOnDeathWish);
+    connect(this, &GameController::onTurnStart, childProcessor, &T::slotOnTurnStart);
+    connect(this, &GameController::onHandSeleted, childProcessor, &T::slotOnHandSeleted);
+    connect(this, &GameController::afterDeploy, childProcessor, &T::slotAfterDeploy);
 }
 
 void GameController::startGame() {//player use which deck is already choosen
     //for cut line relink, no local variable is permitted
-    assets->resetRandomSeed();//set random seed, no need to synchosize random bahaviors
     assets->setPreviousWinner(-1);//-1 means start or draw
     assets->setCurrentRound(0);
-    while (gameLoop()) {
-        //pass
+    assets->setRoundStart(true);
+    assets->clearWeatherOnAllRows();//TODO make GUI perform the same
+    GameController::getController()->getGameUI()->
+            loadCardFromAssets(GameController::getController()->getAssets());
+    //TODO modify the test code
+    for (int player = 0; player < 2; player++) {
+        assets->setPlayerWinRound(player, 0);
+        assets->setPlayerPass(player, false);
+        for (int Round = 0; Round < 3; Round++) {
+            assets->setPlayerScore(player, Round, 0);
+        }
     }
-    //TODO: game end, enter reporing interface
 
+    while (gameLoop()) {
+        //TODO upload the current state to server
+    }
+    //game end, enter reporing interface
+    QString message = assets->getPlayerName(0) + tr(" VS ") + assets->getPlayerName(1) + tr("\n");
+    for (int roundCount = 0; roundCount < assets->getCurrentRound(); roundCount++) {
+        //the current new round will not be processed, so use < instead of <=
+        message += QString::number(assets->getPlayerScore(0, roundCount)) +
+                   tr(" : ") +
+                   QString::number(assets->getPlayerScore(1, roundCount)) +
+                   tr("\n");
+    }
+    QString title = tr("Game Draw!");
+    if (assets->getPlayerWinRound(0) < assets->getPlayerWinRound(1)) {
+        title = assets->getPlayerName(1) + tr(" wins the game!");
+    } else if (assets->getPlayerWinRound(0) > assets->getPlayerWinRound(1)) {
+        title = assets->getPlayerName(0) + tr(" wins the game!");
+    }
+    //CAUTION: compare win rounds when game end, not total score!
+    gameUI->execMessageBox(title, message, GameEndDuration);
+    //game end
 }
 
 bool GameController::gameLoop() {
     if (assets->isGameEnd()) {
         return false;
     }
-    if (assets->isNeedChooseCard()) {//round start not long before
-        assets->setNeedChooseCard(false);
+    if (assets->isRoundStart()) {//round start not long before
+        assets->setRoundStart(false);
+        moveAllFromBattlefieldToGraveyard();//clear the battlefield
         handleRedrawCard();
         if (assets->getPreviousWinner() == -1) {//start or draw
             gameUI->playRandomCoinAnimation();//let ui play the animation
@@ -61,12 +77,7 @@ bool GameController::gameLoop() {
         if (!assets->getPlayerPass(currentPlayer)) {//player not pass
             if (assets->isPlayerHandEmpty(currentPlayer)) {
                 //force to pass
-                assets->setPlayerPass(currentPlayer, true);
-                if (assets->isAllPlayerPass()) {
-                    //TODO all player has end round finished
-                } else {
-                    //do nothing, switch to another player
-                }
+                setPlayerPassAndJudgeRoundEnd(currentPlayer);
             } else {
                 //Player must input
                 assets->setHandled(false);// not lock a player
@@ -85,9 +96,12 @@ bool GameController::gameLoop() {
 
                     if (command == "pass") {
                         //user choose to pass
-
+                        assets->setHandled(true);// no need to request another user input
+                        setPlayerPassAndJudgeRoundEnd(currentPlayer);
                     } else if (command == "leftclick") {
-
+                        //not handle yet, maybe cancelled by right click
+                        CardInfo *seletedCard = assets->getCardArray(row).at(column);
+                        emit onHandSeleted(seletedCard);
                     } else {
                         qWarning() << "unhandled user input:" << command;
                     }
@@ -96,7 +110,6 @@ bool GameController::gameLoop() {
         }
         assets->setCurrentPlayer(currentPlayer ^ 1);
     }
-    //TODO upload the current state to server
     return true;
 }
 
@@ -135,6 +148,7 @@ void GameController::controllerHandleAfterMove(CardInfo *mover, int fromR, int t
 void GameController::controllerHandleDeploy(CardInfo *mover, int fromR, int toR) {
     emit beforeDeploy(mover, fromR, toR);
     emit onDeploy(mover, fromR, toR);
+    emit afterDeploy(mover, fromR, toR);//for foglet
 }
 
 void GameController::controllerHandleBeforeMove(CardInfo *mover, int fromR, int toR) {
@@ -153,7 +167,7 @@ void GameController::performMovePosToPos(int fromR, int fromC, int toR, int toC)
 
 void
 GameController::performChooseCard(int candidateIndex, int seletedIndex, int supplementIndex, int chooseNum, int player,
-                                  bool supply, bool allowEscape, const QString &title) {
+                                  bool supply, bool allowEscape, bool allowSwitchScene, const QString &title) {
     QList<CardInfo *> &candidate = assets->getCardArray(candidateIndex),
             &seleted = assets->getCardArray(seletedIndex),
             &supplement = assets->getCardArray(supplementIndex);
@@ -188,13 +202,11 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
                 }
             }
         } else if (command == "rightclick") {
-            if (player == gameUI->getLocalPlayer()) {//must be a local player to switch scene
+            if (allowSwitchScene) {
                 if (gameUI->getCurrentScene() != AbstractUI::GameScene) {//in local player chooser scene
                     gameUI->switchToScene(AbstractUI::GameScene);
                 } else if (gameUI->getCurrentScene() == AbstractUI::GameScene) {
                     switchUIToChooserScene(player);//player==localplayer
-                } else {
-                    qWarning() << "invalid scene switch!1237896";
                 }
             }
         } else if (command == "escape" + QString::number(player)) {//two buttons: escape0 and escape1
@@ -202,16 +214,11 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
             break;
         }
     }
-
-    if (player == gameUI->getLocalPlayer()) {
-        //switch back to scene, do not wait for the other player
-        gameUI->switchToScene(AbstractUI::GameScene);
-    }
 }
 
 
 void GameController::dispatchChooseCard() {
-    QFutureSynchronizer synchronizer;
+    QFutureSynchronizer<void> synchronizer;
     for (int player = 0; player < 2; player++) {
         synchronizer.addFuture(QtConcurrent::run(this, &GameController::performRedrawCard, player));
     }
@@ -223,21 +230,12 @@ void GameController::handleRedrawCard() {//handle two players' redraw card
         //add card from deck to hand first
         moveNCardsFromDeckToHand(player, NumberToChoose[assets->getCurrentRound()]);
         //perform move card from hand to candidate
-        int playerDeck = assets->getDeckIndex(player);
+        int playerHand = assets->getHandIndex(player);
         int playerCandidate = assets->getCandidateIndex(player);
-        performMoveAllCardsFromAToB(playerDeck, playerCandidate);
-    }
-
-    switchUIToChooserScene(gameUI->getLocalPlayer());
-
-    QFutureWatcher<void> watcher;
-    QEventLoop eventLoop;
-    connect(&watcher, &QFutureWatcher<void>::finished, &eventLoop, &QEventLoop::quit);
-    QFuture future = QtConcurrent::run(this, &GameController::dispatchChooseCard);
-    watcher.setFuture(future);
-    eventLoop.exec();
-
-    for (int player = 0; player < 2; player++) {
+        performMoveAllCardsFromAToB(playerHand, playerCandidate);
+        int candidateIndex = assets->getCandidateIndex(player);
+        gameUI->resetValidPositions();
+        gameUI->setWholeRowValidPositions(candidateIndex);
         int seletedIndex = assets->getSeletedIndex(player);
         int deckIndex = assets->getDeckIndex(player);
         //insert the seleted randomly to deck
@@ -246,6 +244,19 @@ void GameController::handleRedrawCard() {//handle two players' redraw card
         int candidateIndex = assets->getCandidateIndex(player);
         int handIndex = assets->getHandIndex(player);
         performMoveAllCardsFromAToB(candidateIndex, handIndex);
+//
+//    switchUIToChooserScene(gameUI->getLocalPlayer());
+//    gameUI->resetValidPositions();//must be set here because multithread can ruin the validposition
+//    gameUI->setWholeRowValidPositions(Player0_Candidate);
+//    gameUI->setWholeRowValidPositions(Player1_Candidate);
+//
+//    QFutureWatcher<void> watcher;
+//    QEventLoop eventLoop;
+//    connect(&watcher, &QFutureWatcher<void>::finished, &eventLoop, &QEventLoop::quit);
+//    QFuture<void> future = QtConcurrent::run(this, &GameController::dispatchChooseCard);
+//    watcher.setFuture(future);
+//    eventLoop.exec();
+
     }
 }
 
@@ -308,4 +319,84 @@ void GameController::moveNCardsFromDeckToHand(int player, int n) {
 void GameController::setCurrentPlayerForAssetsAndUI(int player) {
     assets->setCurrentPlayer(player);
     gameUI->setCurrentPlayer(player);//this function may block
+}
+
+void GameController::setPlayerPassAndJudgeRoundEnd(int currentPlayer) {
+    assets->setPlayerPass(currentPlayer, true);
+    if (assets->isAllPlayerPass()) {
+        //end a round
+
+        //calculate
+        int combatValue[2] = {assets->getPlayerCombatValueSum(0),
+                              assets->getPlayerCombatValueSum(1)};
+        int currentRound = assets->getCurrentRound();
+        for (int player = 0; player < 2; player++) {
+            assets->setPlayerScore(player, currentRound, combatValue[player]);
+        }
+
+        QString message = tr("Round") + QString::number(currentRound + 1);
+
+        int localPlayer = gameUI->getLocalPlayer();
+        if (combatValue[localPlayer] < combatValue[localPlayer ^ 1]) {
+            message += tr(" Lose!");
+            assets->addPlayerWinRound(localPlayer ^ 1);
+            assets->setPreviousWinner(localPlayer ^ 1);
+        } else if (combatValue[localPlayer] == combatValue[localPlayer ^ 1]) {
+            message += tr(" Draw!");
+            assets->setPreviousWinner(-1);//dummy value, draw
+        } else if (combatValue[localPlayer] > combatValue[localPlayer ^ 1]) {
+            message += tr(" Win!");
+            assets->addPlayerWinRound(localPlayer);
+            assets->setPreviousWinner(localPlayer);
+        }
+
+        gameUI->execMessageBox(tr("Round Ended"), message, RoundEndDuration);
+        assets->addCurrentRound();
+        assets->setRoundStart(true);//start another round
+    }
+}
+
+void GameController::moveAllFromBattlefieldToGraveyard() {
+    for (int row = Player1_Siege; row <= Player0_Siege; row++) {//all battlefield
+        while (!assets->getCardArray(row).empty()) {
+            CardInfo *mover = assets->getCardArray(row).last();
+            moveToGraveyard(mover);
+        }
+    }
+}
+
+void GameController::moveToGraveyard(CardInfo *mover) {
+    int row, column;
+    assets->getCardPosition(mover, row, column);
+    if (row <= Player1_Melee) {//player1's card
+        moveCardToRightTop(mover, Player1_Graveyard);
+    } else {
+        moveCardToRightTop(mover, Player0_Graveyard);
+    }
+}
+
+AbstractUI *GameController::getGameUI() const {
+    return gameUI;
+}
+
+void GameController::setGameUI(AbstractUI *gameUI) {
+    GameController::gameUI = gameUI;
+}
+
+void GameController::setAssets(GameAssets *assets) {
+    GameController::assets = assets;
+}
+
+GameAssets *GameController::getAssets() const {
+    return assets;
+}
+
+GameController *GameController::mainController = nullptr;
+
+GameController *GameController::getController() {
+    if (mainController == nullptr) {
+        mainController = new GameController();
+        registerSubclasses();
+    }
+    return mainController;
 }

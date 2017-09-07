@@ -10,8 +10,9 @@
 #include "AbstractUI.h"
 #include "ConsoleWindow.h"
 #include "ui_consoleui.h"
+#include "AbstractIOBuffer.h"
 
-class ConsoleView : AbstractUI {
+class ConsoleView : public QObject, public AbstractUI {
 
 public:
 
@@ -23,11 +24,11 @@ public:
 
     void releaseSource() override;//when user click right mouse
 
-    void addTarget(int row, int column) override;// there can be MULTIPLE targets!
+//    void addTarget(int row, int column) override;// there can be MULTIPLE targets!
 
-    void removeTarget(int row, int column) override;
+//    void removeTarget(int row, int column) override;
 
-    void setUIState(State state) override;
+//    void setUIState(State state) override;
 
     void setValidRows(const QList<int> &validRows) override;
 
@@ -44,49 +45,69 @@ public:
 
     void moveCard(QList<CardInfo *> &fromSlot, int fromIndex, QList<CardInfo *> &toSlot, int toIndex);
 
-    void removeCard(int fromR, int fromC) override;//remove from the game
+//    void removeCard(int fromR, int fromC) override;//remove from the game
 
-    void spawnCard(int toR, int toC, CardInfo *info) override;
+//    void spawnCard(int toR, int toC, CardInfo *info) override;
 
-    void getUserInput(QString &clicktype, int &row, int &column,int player) override;
+    void getUserInput(QString &clicktype, int &row, int &column, int player) override;
 
-    void showSelfDamage(const QList<QPoint> &targets) override;
+//    void showSelfDamage(const QList<QPoint> &targets) override;
 
-    void showDamage(QPoint source,
-                    const QList<QPoint> &targets) override;//show damage visual effects(animations) from source to MULTIPLE targets
+//    void showDamage(QPoint source,
+//                    const QList<QPoint> &targets) override;//show damage visual effects(animations) from source to MULTIPLE targets
 
-    void showSelfBoost(const QList<QPoint> &targets) override;
+//    void showSelfBoost(const QList<QPoint> &targets) override;
 
-    void showBoost(QPoint source,
-                   const QList<QPoint> &targets) override;
+//    void showBoost(QPoint source,
+//                   const QList<QPoint> &targets) override;
 
-    void showSwallow(QPoint source,
-                     const QList<QPoint> &targets) override;
+//    void showSwallow(QPoint source,
+//                     const QList<QPoint> &targets) override;
 
     void setCurrentPlayer(int player) override;//switched by logic every turn
     void setLocalPlayer(int player) override;//set local player at the beginning of the game
 
+//    void showTimer(double timeleft) override;
 
-    void showTimer(double timeleft) override;
+//    void clearTimer() override;
 
-    void clearTimer() override;
+    QString getCardInfoString(CardInfo *info);
 
-    void displayCardInfo(CardInfo *info);
-
-    void displaySlotInfo(const QList<CardInfo *> &slot);
-
-    void displaySlotIndexInfo(int index);
+    void displayCardSlotInfo(int row);
 
     void display();
 
-    void applyWeatherOnRow(Weather weathertype, int row);
+//    void applyWeatherOnRow(Weather weathertype, int row);
+
+
+    void setWholeRowValidPositions(int row) override;
+
+    void setButtonEnabled(int button, bool enabled) override;
+
+    void switchToScene(Scene nextScene) override;
+
+    Scene getCurrentScene() override;
+
+    int getLocalPlayer() override;
+
+    void playRandomCoinAnimation() override;
+
+    void execMessageBox(const QString &title, const QString &message, int duration) override;
+
+    void setPlayerInputState(int player, InputState state) override;
+
+    void loadCardFromAssets(GameAssets *assets) override;
 
 private:
-    State m_state;
+    InputState playerInputState[2];// for each player
     ConsoleWindow *mainwindow;
+
+    AbstractIOBuffer *inputBuffer[2];
 
     QPoint source;
     QList<QPoint> targets;
+
+    Scene currentScene;
 
     QList<CardInfo *> cardslots[ROW_NUM];
     Weather rowWeather[ROW_NUM];
@@ -94,9 +115,10 @@ private:
     QList<bool> posBoolValid[ROW_NUM];
     bool validRow[ROW_NUM];
 
-    QLabel *textLabelArray[10];
-    QPushButton *pushButtonArray[2];
-    QLineEdit *lineEditArray[2];
+    QLabel *pQLabel[20];
+    QPushButton *pQPushButton[4];
+    QLineEdit *pLineEdit;
+
     QTextBrowser *textBrowser;
 
     int currentPlayer;

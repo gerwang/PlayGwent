@@ -17,7 +17,7 @@ void CardInfo::fromJsonFile(const QString &filePath) {
     jsonFile.open(QIODevice::ReadOnly | QIODevice::Text);
     QString jsonStr = jsonFile.readAll();
     jsonFile.close();
-    QJsonParseError jsonErr;
+    QJsonParseError jsonErr{};
     QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonStr.toUtf8(), &jsonErr);
     if (jsonErr.error == QJsonParseError::NoError) {
         QJsonObject jsonObj = jsonDoc.object();
@@ -211,5 +211,12 @@ int CardInfo::getCD() const {
 
 void CardInfo::setCD(int CD) {
     CardInfo::CD = CD;
+}
+
+CardInfo *CardInfo::createByName(const QString &name) {
+    auto info = new CardInfo();
+    QString filePath = QString("./assets/card_info/") + name + QString(".json");
+    info->fromJsonFile(filePath);
+    return info;
 }
 

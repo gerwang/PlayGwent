@@ -6,27 +6,50 @@
 #include "ConsoleView.h"
 #include <QDebug>
 #include <QtWidgets/QMessageBox>
+#include <QTimer>
+#include "ConsoleIOBuffer.h"
 
 ConsoleView::ConsoleView(QObject *parent) {
     mainwindow = new ConsoleWindow();
-    QLabel *tempLabel[10] = {mainwindow->ui->label,
-                             mainwindow->ui->label_2,
-                             mainwindow->ui->label_3,
-                             mainwindow->ui->label_4,
-                             mainwindow->ui->label_5,
-                             mainwindow->ui->label_6,
-                             mainwindow->ui->label_7,
-                             mainwindow->ui->label_8,
-                             mainwindow->ui->label_9,
-                             mainwindow->ui->label_10};
-    for (int i = 0; i < 10; i++) {
-        textLabelArray[i] = tempLabel[i];
+    QLabel *tempLabel[LABEL_NUM] = {mainwindow->ui->label,
+                                    mainwindow->ui->label_2,
+                                    mainwindow->ui->label_3,
+                                    mainwindow->ui->label_4,
+                                    mainwindow->ui->label_5,
+                                    mainwindow->ui->label_6,
+                                    mainwindow->ui->label_7,
+                                    mainwindow->ui->label_8,
+                                    mainwindow->ui->label_9,
+                                    mainwindow->ui->label_10,
+                                    mainwindow->ui->label_11,
+                                    mainwindow->ui->label_12,
+                                    mainwindow->ui->label_13,
+                                    mainwindow->ui->label_14,
+                                    mainwindow->ui->label_15,
+                                    mainwindow->ui->label_16,
+                                    mainwindow->ui->label_17,
+                                    mainwindow->ui->label_18,
+                                    mainwindow->ui->label_19,
+                                    mainwindow->ui->label_20,};
+    for (int i = 0; i < LABEL_NUM; i++) {
+        pQLabel[i] = tempLabel[i];
     }
-    pushButtonArray[0] = mainwindow->ui->pushButton;
-    pushButtonArray[1] = mainwindow->ui->pushButton_2;
-    lineEditArray[0] = mainwindow->ui->lineEdit;
-    lineEditArray[1] = mainwindow->ui->lineEdit_2;
+    pLineEdit = mainwindow->ui->lineEdit;
+    QPushButton *tempButton[BUTTON_NUM] = {mainwindow->ui->pushButton,
+                                           mainwindow->ui->pushButton_2,
+                                           mainwindow->ui->pushButton_3,
+                                           mainwindow->ui->pushButton_4};
+    for (int i = 0; i < BUTTON_NUM; i++) {
+        pQPushButton[i] = tempButton[i];
+    }
+    inputBuffer[0] = new ConsoleIOBuffer(mainwindow->ui->pushButton_5, mainwindow->ui->lineEdit_2);
+    inputBuffer[1] = new ConsoleIOBuffer(mainwindow->ui->pushButton_6, mainwindow->ui->lineEdit_3);
+
+    playerInputState[0] = playerInputState[1] = AbstractUI::RejectAll;
     textBrowser = mainwindow->ui->textBrowser;
+    mainwindow->show();
+
+    source = QPoint(-1, -1);
 }
 
 ConsoleView::~ConsoleView() {
@@ -37,13 +60,16 @@ void ConsoleView::setSource(int row, int column) {
     source = QPoint(row, column);
     textBrowser->append(
             tr("set source (%1, %2, %3)\n").arg(row).arg(column).arg(cardslots[row][column]->getCardName()));
+    display();
 }
 
 void ConsoleView::releaseSource() {
     source = QPoint(-1, -1);//the dummy value -1
     textBrowser->append(tr("source removed"));
+    display();
 }
 
+/*
 void ConsoleView::addTarget(int row, int column) {
     QPoint target(row, column);
     if (!targets.contains(target)) {
@@ -59,12 +85,15 @@ void ConsoleView::removeTarget(int row, int column) {
     textBrowser->append(
             tr("remove target (%1, %2, %3)\n").arg(row).arg(column).arg(cardslots[row][column]->getCardName()));
 }
+ */
 
+/*
 void ConsoleView::setUIState(AbstractUI::State state) {
-    m_state = state;
+    playerInputState = state;
     textBrowser->append(
             tr("current state switched: %1").arg(QMetaEnum::fromType<State>().valueToKey(state)));
 }
+ */
 
 void ConsoleView::setValidRows(const QList<int> &validRows) {
     for (auto row:validRows) {
@@ -99,11 +128,11 @@ void ConsoleView::resetValidPositions() {
 }
 
 void ConsoleView::setLabelText(int index, QString text) {
-    textLabelArray[index]->setText(text);
+    pQLabel[index]->setText(text);
 }
 
-void ConsoleView::displayCardInfo(CardInfo *info) {
-    const char *nameColor[] = {"chocolate", "silver", "gold", "gray"};
+QString ConsoleView::getCardInfoString(CardInfo *info) {
+    const char *nameColor[] = {"chocolate", "silver", "orange", "gray"};
     QString nameField =
             tr("<font color=\"") + tr(nameColor[info->getType()]) + tr("\">") + info->getCardName() + tr("</font>");
     const char *strenghColor[] = {"red", "black", "green"};
@@ -127,43 +156,38 @@ void ConsoleView::displayCardInfo(CardInfo *info) {
         result += tr(", shield");
     }
     result += tr(")");
-    qDebug() << result;//TODO: delete test code
+    return result;
+}
+
+void ConsoleView::displayCardSlotInfo(int row) {
+    QString result = tr("<font color=\"orangered\">[") + QString::number(row) + tr("] ") + CardSlotMSG[row] +
+                     tr("</font>: ");
+    for (int column = 0; column < cardslots[row].size(); column++) {
+        QString validColor[2] = {"red", "green"};
+        QString columnStr = tr("<font color=\"%1\">[%2]</font>").arg(validColor[posBoolValid[row][column]]).arg(column);
+        result += columnStr;
+        if (source == QPoint(row, column)) {//been set source
+            result += tr("src:");
+        }
+        if (targets.contains(QPoint(row, column))) {
+            result += tr("target:");
+        }
+        result += getCardInfoString(cardslots[row][column]);
+    }
     textBrowser->append(result);
 }
 
-void ConsoleView::displaySlotIndexInfo(int index) {
-    textBrowser->append(
-            tr("<font color=\"orangered\">[") + QString::number(index) + tr("] ") +
-            cardslotMsg + tr("</font>: "));
-    displaySlotInfo(cardslots[index]);
-}
-
-void ConsoleView::displaySlotInfo(const QList<CardInfo *> &slot) {
-    for (auto info:slot) {
-        displayCardInfo(info);
-        textBrowser->append(" ");
-    }
-    textBrowser->append("\n");
-}
-
 void ConsoleView::display() {
-    textBrowser->append(tr("Player %1's turn\n").arg(currentPlayer));
-    for (int i = 0; i < ROW_NUM; i++) {
-        displaySlotIndexInfo(i);
+    QString result = tr("Player %1's turn in scene %2").arg(currentPlayer).arg(SceneMSG[currentScene]);
+    for (int row = 0; row < ROW_NUM; row++) {
+        displayCardSlotInfo(row);
     }
-    if (source.x() != -1) {
-        textBrowser->append(tr("source: (%1, %2, %3)\n").arg(source.x()).arg(source.y()).arg(
-                cardslots[source.x()][source.y()]->getCardName()));
-    }
-    textBrowser->append(tr("target: "));
-    for (auto &target:targets) {
-        textBrowser->append(tr("(%1, %2, %3) ").arg(target.x()).arg(target.y()).arg(
-                cardslots[target.x()][target.y()]->getCardName()));
-    }
-    textBrowser->append("\n\n");
+    textBrowser->append(result);
 }
 
 void ConsoleView::moveCard(int fromR, int fromC, int toR, int toC) {
+//    qDebug() << cardslots[fromR].size() << fromC << "237486";//TODO delete test
+//    qDebug() << cardslots[fromR][fromC]->getCardName() << "546846876";//TODO delete test
     textBrowser->append(
             tr("moving %1(%2,%3)->(%4,%5)\n").arg(cardslots[fromR][fromC]->getCardName()).arg(fromR).arg(fromC).arg(
                     toR).arg(toC));
@@ -173,6 +197,7 @@ void ConsoleView::moveCard(int fromR, int fromC, int toR, int toC) {
     moveCard(cardslots[fromR], fromC, cardslots[toR], toC);
 }
 
+/*
 void ConsoleView::removeCard(int fromR, int fromC) {
     cardslots[fromR].removeAt(fromC);
     posBoolValid[fromR].removeAt(fromC);
@@ -186,21 +211,23 @@ void ConsoleView::spawnCard(int toR, int toC, CardInfo *info) {
 
     textBrowser->append(tr("spawning (%1,%2,%3)\n").arg(toR).arg(toC).arg(info->getCardName()));
 }
-
+*/
 void ConsoleView::moveCard(QList<CardInfo *> &fromSlot, int fromIndex, QList<CardInfo *> &toSlot, int toIndex) {
     if (&fromSlot == &toSlot) {
-        qDebug() << "same slot! 65468435";//consider gell
+        qDebug() << "same slot! 65468435";//consider gell, he is okay now
     }
     CardInfo *mover = fromSlot[fromIndex];
     fromSlot.removeAt(fromIndex);
 
-    textBrowser->append(tr("animation to make space\n"));
+//    textBrowser->append(tr("animation to make space\n"));
 
     toSlot.insert(toIndex, mover);
 
-    textBrowser->append(tr("animation moving\n"));//TODO: finally some card will have front side and back side
+//    textBrowser->append(tr("animation moving\n"));//TODO: finally some card will have front side and back side
+    display();
 }
 
+/*
 //this function will block
 void ConsoleView::getUserInput(QString &clicktype, int &row, int &column, int player) {
     //some valid
@@ -227,27 +254,27 @@ void ConsoleView::getUserInput(QString &clicktype, int &row, int &column, int pl
                     row = stringList[1].toInt();
                     column = stringList[2].toInt();
 
-                    if (m_state == Hand ||
-                        m_state == Target) {
+                    if (playerInputState == Hand ||
+                        playerInputState == Target) {
                         if (posBoolValid[row][column]) {
                             return;//get a valid result
                         }
                     }
                     break;
                 case 'r'://right click to cancel the selection
-                    if (m_state == Hand ||
-                        m_state == Target ||
-                        m_state == Pos) {
+                    if (playerInputState == Hand ||
+                        playerInputState == Target ||
+                        playerInputState == Pos) {
                         return;// let logic to judge if it is valid
                     }
                     break;
                 case 's'://stop follow
-                    if (m_state == Hand) {
+                    if (playerInputState == Hand) {
                         return;
                     }
                     break;
                 case 'e'://escape when choose a card
-                    if (m_state == Chooser) {
+                    if (playerInputState == Chooser) {
                         return;
                     }
                     break;
@@ -255,7 +282,8 @@ void ConsoleView::getUserInput(QString &clicktype, int &row, int &column, int pl
         }
     }
 }
-
+ */
+/*
 void ConsoleView::showSelfDamage(const QList<QPoint> &targets) {
     //play the animation parallel
     textBrowser->append("self damage: ");
@@ -312,7 +340,7 @@ void ConsoleView::showSwallow(QPoint source, const QList<QPoint> &targets) {
     }
     textBrowser->append("\n");
 }
-
+*/
 void ConsoleView::setCurrentPlayer(int player) {
     currentPlayer = player;
     textBrowser->append(tr("flipping player turn coin animation: %1\n").arg(currentPlayer));
@@ -322,6 +350,65 @@ void ConsoleView::setLocalPlayer(int player) {
     localPlayer = player;
 }
 
+void ConsoleView::setWholeRowValidPositions(int row) {
+    for (bool &column : posBoolValid[row]) {
+        column = true;
+    }
+}
+
+void ConsoleView::playRandomCoinAnimation() {
+    textBrowser->append(tr("Playing random Coin Animation\n"));
+}
+
+void ConsoleView::getUserInput(QString &clicktype, int &row, int &column, int player) {
+    textBrowser->append(tr("the current input state is %1").arg(InputStateMSG[playerInputState[player]]));
+    inputBuffer[player]->getUserInput(clicktype, row, column);
+}
+
+void ConsoleView::setButtonEnabled(int button, bool enabled) {
+    pQPushButton[button]->setEnabled(enabled);
+}
+
+void ConsoleView::switchToScene(AbstractUI::Scene nextScene) {
+    textBrowser->append(tr("switch Scene from %1 to %2").arg(SceneMSG[currentScene]).arg(SceneMSG[nextScene]));
+    currentScene = nextScene;
+}
+
+int ConsoleView::getLocalPlayer() {
+    return localPlayer;
+}
+
+AbstractUI::Scene ConsoleView::getCurrentScene() {
+    return currentScene;
+}
+
+void ConsoleView::execMessageBox(const QString &title, const QString &message, int duration) {
+    QEventLoop loop;
+    QMessageBox messageBox;
+    messageBox.setWindowTitle(title);
+    messageBox.setText(message);
+    QTimer::singleShot(duration, &loop, &QEventLoop::quit);
+    messageBox.show();
+    loop.exec();
+    messageBox.hide();
+}
+
+void ConsoleView::setPlayerInputState(int player, AbstractUI::InputState state) {
+    playerInputState[player] = state;
+}
+
+void ConsoleView::loadCardFromAssets(GameAssets *assets) {
+    for (int row = Player1_Graveyard; row <= Player0_Graveyard; row++) {
+        rowWeather[row] = assets->getRowWeather(row);
+        cardslots[row].clear();
+        for (auto info:assets->getCardArray(row)) {
+            cardslots[row].append(info);
+            posBoolValid[row].append(false);
+        }
+    }
+}
+
+/*
 void ConsoleView::showTimer(double timeleft) {//this function should NOT block
     //initially there is not timer TODO: add a timer
 }
@@ -335,3 +422,4 @@ void ConsoleView::applyWeatherOnRow(Weather weathertype, int row) {
             weathertype));//TODO: check if the enum can be outputed normally
     rowWeather[row] = weathertype;
 }
+ */

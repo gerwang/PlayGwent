@@ -7,5 +7,5 @@
 #include "GameController.h"
 
 void registerSubclasses() {
-
+    //the earlier registered here, the earlier to process
 }
