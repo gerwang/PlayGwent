@@ -60,11 +60,6 @@ private:
                            int chooseNum, int player, bool supply, bool allowEscape,
                            bool allowSwitchScene, const QString &title);
 
-    void dispatchChooseCard();
-    //this function would REALLY BLOCK, so use it in QtConcurrent
-
-    void performRedrawCard(int player);//just a wrapper of performChooseCard
-
     void handleRedrawCard();
 
     void moveAllFromBattlefieldToGraveyard();

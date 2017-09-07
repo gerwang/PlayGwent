@@ -26,6 +26,7 @@ void GameController::startGame() {//player use which deck is already choosen
     GameController::getController()->getGameUI()->
             loadCardFromAssets(GameController::getController()->getAssets());
     //TODO modify the test code
+    gameUI->switchToScene(AbstractUI::GameScene);
     for (int player = 0; player < 2; player++) {
         assets->setPlayerWinRound(player, 0);
         assets->setPlayerPass(player, false);
@@ -85,13 +86,13 @@ bool GameController::gameLoop() {
                     //user choose a hand card
 
                     gameUI->setPlayerInputState(currentPlayer, AbstractUI::MustValidTarget);
-                    gameUI->resetValidPositions();//set all to invalid
                     gameUI->setWholeRowValidPositions(assets->getHandIndex(currentPlayer));
                     gameUI->setButtonEnabled(BUTTON_PASS, true);
                     QString command;
                     int row, column;
                     gameUI->getUserInput(command, row, column, currentPlayer);
                     gameUI->setButtonEnabled(BUTTON_PASS, false);
+                    gameUI->resetValidPositions();
                     gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
 
                     if (command == "pass") {
@@ -182,9 +183,11 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
 
         QString command;
         int row, column;
+        gameUI->setWholeRowValidPositions(candidateIndex);
         gameUI->setPlayerInputState(player, AbstractUI::MustValidTarget);
         gameUI->getUserInput(command, row, column, player);
         gameUI->setPlayerInputState(player, AbstractUI::RejectAll);
+        gameUI->resetValidPositions();
 
         if (command == "leftclick") {//must be a valid input (filtered by UI)
             if (row != candidateIndex) {
@@ -209,68 +212,36 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
                     switchUIToChooserScene(player);//player==localplayer
                 }
             }
-        } else if (command == "escape" + QString::number(player)) {//two buttons: escape0 and escape1
+        } else if (command == "escape") {//map two buttons to a same command
             //already use a message box to ensure the opearation via UI
             break;
         }
     }
 }
 
-
-void GameController::dispatchChooseCard() {
-    QFutureSynchronizer<void> synchronizer;
-    for (int player = 0; player < 2; player++) {
-        synchronizer.addFuture(QtConcurrent::run(this, &GameController::performRedrawCard, player));
-    }
-}
-
-
 void GameController::handleRedrawCard() {//handle two players' redraw card
     for (int player = 0; player < 2; player++) {
         //add card from deck to hand first
         moveNCardsFromDeckToHand(player, NumberToChoose[assets->getCurrentRound()]);
+
+        switchUIToChooserScene(player);
+
         //perform move card from hand to candidate
-        int playerHand = assets->getHandIndex(player);
-        int playerCandidate = assets->getCandidateIndex(player);
-        performMoveAllCardsFromAToB(playerHand, playerCandidate);
+        int handIndex = assets->getHandIndex(player);
         int candidateIndex = assets->getCandidateIndex(player);
-        gameUI->resetValidPositions();
-        gameUI->setWholeRowValidPositions(candidateIndex);
+        performMoveAllCardsFromAToB(handIndex, candidateIndex);
+
         int seletedIndex = assets->getSeletedIndex(player);
         int deckIndex = assets->getDeckIndex(player);
+        performChooseCard(candidateIndex, seletedIndex, deckIndex, NumberToRedraw[assets->getCurrentRound()], player,
+                          true, true, true, QString("Please Choose Card to Redraw"));
+
         //insert the seleted randomly to deck
         performRandomlyMoveAllCardsFromAToB(seletedIndex, deckIndex);
         //perform move candidate BACK to hand
-        int candidateIndex = assets->getCandidateIndex(player);
-        int handIndex = assets->getHandIndex(player);
         performMoveAllCardsFromAToB(candidateIndex, handIndex);
-//
-//    switchUIToChooserScene(gameUI->getLocalPlayer());
-//    gameUI->resetValidPositions();//must be set here because multithread can ruin the validposition
-//    gameUI->setWholeRowValidPositions(Player0_Candidate);
-//    gameUI->setWholeRowValidPositions(Player1_Candidate);
-//
-//    QFutureWatcher<void> watcher;
-//    QEventLoop eventLoop;
-//    connect(&watcher, &QFutureWatcher<void>::finished, &eventLoop, &QEventLoop::quit);
-//    QFuture<void> future = QtConcurrent::run(this, &GameController::dispatchChooseCard);
-//    watcher.setFuture(future);
-//    eventLoop.exec();
 
-    }
-}
-
-void GameController::performRedrawCard(int player) {
-    if (player == 0) {
-        performChooseCard(Player0_Candidate, Player0_Seleted,
-                          Player0_Deck, NumberToRedraw[assets->getCurrentRound()],
-                          player, true, true, tr("Select card(s) to redraw:"));
-        performMoveAllCardsFromAToB(Player0_Candidate, Player0_Hand);
-    } else if (player == 1) {
-        performChooseCard(Player1_Candidate, Player1_Seleted,
-                          Player1_Deck, NumberToRedraw[assets->getCurrentRound()],
-                          player, true, true, tr("Selete card(s) to redraw:"));
-        performMoveAllCardsFromAToB(Player1_Candidate, Player1_Hand);
+        gameUI->switchToScene(AbstractUI::GameScene);
     }
 }
 

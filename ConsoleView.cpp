@@ -50,6 +50,13 @@ ConsoleView::ConsoleView(QObject *parent) {
     mainwindow->show();
 
     source = QPoint(-1, -1);
+    currentScene = AbstractUI::MainMenuScene;
+
+    for (int row = 0; row < ROW_NUM; row++) {
+        rowWeather[row] = Weather::Sunny;
+        validRow[row] = false;
+    }
+    currentPlayer = localPlayer = -1;
 }
 
 ConsoleView::~ConsoleView() {
@@ -163,7 +170,7 @@ void ConsoleView::displayCardSlotInfo(int row) {
     QString result = tr("<font color=\"orangered\">[") + QString::number(row) + tr("] ") + CardSlotMSG[row] +
                      tr("</font>: ");
     for (int column = 0; column < cardslots[row].size(); column++) {
-        QString validColor[2] = {"red", "green"};
+        QString validColor[2] = {"green", "red"};
         QString columnStr = tr("<font color=\"%1\">[%2]</font>").arg(validColor[posBoolValid[row][column]]).arg(column);
         result += columnStr;
         if (source == QPoint(row, column)) {//been set source
@@ -178,18 +185,19 @@ void ConsoleView::displayCardSlotInfo(int row) {
 }
 
 void ConsoleView::display() {
-    QString result = tr("Player %1's turn in scene %2").arg(currentPlayer).arg(SceneMSG[currentScene]);
+    textBrowser->append("begin-------------------------------------------------------------------");
+    textBrowser->append(tr("Player %1's turn in scene %2").arg(currentPlayer).arg(SceneMSG[currentScene]));
     for (int row = 0; row < ROW_NUM; row++) {
         displayCardSlotInfo(row);
     }
-    textBrowser->append(result);
+    textBrowser->append("end-------------------------------------------------------------------");
 }
 
 void ConsoleView::moveCard(int fromR, int fromC, int toR, int toC) {
 //    qDebug() << cardslots[fromR].size() << fromC << "237486";//TODO delete test
 //    qDebug() << cardslots[fromR][fromC]->getCardName() << "546846876";//TODO delete test
     textBrowser->append(
-            tr("moving %1(%2,%3)->(%4,%5)\n").arg(cardslots[fromR][fromC]->getCardName()).arg(fromR).arg(fromC).arg(
+            tr("moving %1(%2,%3)->(%4,%5)").arg(cardslots[fromR][fromC]->getCardName()).arg(fromR).arg(fromC).arg(
                     toR).arg(toC));
     bool valid = posBoolValid[fromR][fromC];
     posBoolValid[fromR].removeAt(fromC);
@@ -362,6 +370,7 @@ void ConsoleView::playRandomCoinAnimation() {
 
 void ConsoleView::getUserInput(QString &clicktype, int &row, int &column, int player) {
     textBrowser->append(tr("the current input state is %1").arg(InputStateMSG[playerInputState[player]]));
+    display();
     inputBuffer[player]->getUserInput(clicktype, row, column);
 }
 
@@ -372,6 +381,7 @@ void ConsoleView::setButtonEnabled(int button, bool enabled) {
 void ConsoleView::switchToScene(AbstractUI::Scene nextScene) {
     textBrowser->append(tr("switch Scene from %1 to %2").arg(SceneMSG[currentScene]).arg(SceneMSG[nextScene]));
     currentScene = nextScene;
+    display();
 }
 
 int ConsoleView::getLocalPlayer() {
