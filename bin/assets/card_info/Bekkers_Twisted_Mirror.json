@@ -1,0 +1,17 @@
+{
+  "cardName": "Bekkers_Twisted_Mirror",
+  "attributes": [
+    "Special",
+    "Spell"
+  ],
+  "infomation": "Damage the Highest Unit by an amount equal to its Power, but no more than 10 (ignoring Armor) and Boost the Lowest other Unit by the same amount.",
+  "initialStrength": 0,
+  "currentStrength": 0,
+  "armor": 0,
+  "faction": "Neutral",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Silver",
+  "CD": -1,
+  "shield": false
+}

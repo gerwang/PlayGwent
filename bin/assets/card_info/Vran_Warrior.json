@@ -1,0 +1,16 @@
+{
+  "cardName": "Vran_Warrior",
+  "attributes": [
+    "Draconid"
+  ],
+  "infomation": "Deploy: Consume the Unit to the right. Every 2 turns, at the start of your turn, Consume the Unit to the right.",
+  "initialStrength": 5,
+  "currentStrength": 5,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": 2,
+  "shield": false
+}

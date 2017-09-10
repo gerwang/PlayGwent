@@ -1,0 +1,17 @@
+{
+  "cardName": "Arachas_Hatchling",
+  "attributes": [
+    "Insectoid",
+    "Doomed"
+  ],
+  "infomation": "Play all Arachasae from your deck.",
+  "initialStrength": 3,
+  "currentStrength": 3,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

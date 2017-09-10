@@ -1,0 +1,16 @@
+{
+  "cardName": "Arachas",
+  "attributes": [
+    "Insectoid"
+  ],
+  "infomation": "Deploy: Play all Arachasae from your Deck.",
+  "initialStrength": 3,
+  "currentStrength": 3,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Ranged",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

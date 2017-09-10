@@ -1,0 +1,16 @@
+{
+  "cardName": "Foglet",
+  "attributes": [
+    "Necrophage"
+  ],
+  "infomation": "Whenever you apply Fog to an opposing row, play a Foglet from your Deck on that row on your side. If there are no Foglets in your Deck, Resurrect a Foglet on that row on your side. When all Fog has been cleared from the Board, Destroy all Foglets.",
+  "initialStrength": 4,
+  "currentStrength": 4,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

@@ -1,0 +1,16 @@
+{
+  "cardName": "Archgriffin",
+  "attributes": [
+    "Beast"
+  ],
+  "infomation": "Deploy: Clear Weather from the row on your side. Move a Bronze card from one Graveyard to the other.",
+  "initialStrength": 8,
+  "currentStrength": 8,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

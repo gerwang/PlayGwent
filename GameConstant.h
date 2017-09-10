@@ -5,7 +5,7 @@
 #ifndef PLAYGWENT_GAMECONSTANT_H_H
 #define PLAYGWENT_GAMECONSTANT_H_H
 
-const int ROW_NUM = 22;//the num of row on battlefield
+const int ROW_NUM = 20;//the num of row on battlefield
 
 const QString CardSlotMSG[ROW_NUM] =
         {
@@ -22,23 +22,20 @@ const QString CardSlotMSG[ROW_NUM] =
                 "player0_deck",//10
                 "player0_graveyard", //11
 
-                "Player1_Candidate",//12
-                "Player1_Seleted",// 13,
+                "Player_Candidate",//12,
+                "Player_Seleted",// 13,
 
-                "Player0_Candidate",//14,
-                "Player0_Seleted",// 15,
+                "DeckBuilder_Candidate",// 14,
+                "DeckBuilder_NoHP",// 15,
+                "DeckBuilder_Siege",// 16,
+                "DeckBuilder_Ranged",// 17,
+                "DeckBuilder_Melee_Event",// 18
 
-                "DeckBuilder_Candidate",// 16,
-                "DeckBuilder_NoHP",// 17,
-                "DeckBuilder_Siege",// 18,
-                "DeckBuilder_Ranged",// 19,
-                "DeckBuilder_Melee_Event",// 20,
-
-                "Main_Menu"// 21
+                "Main_Menu"// 19
         };
 
-const QString SceneMSG[5] = {
-        "MainMenuScene", "GameScene", "DeckBuilderScene", "Player0ChooserScene", "Player1ChooserScene"
+const QString SceneMSG[4] = {
+        "MainMenuScene", "GameScene", "DeckBuilderScene", "PlayerChooserScene"
 };
 
 const QString InputStateMSG[3] = {
@@ -64,47 +61,50 @@ enum CardArrayEnum {
     Player0_Deck = 10,
     Player0_Graveyard = 11,
 
-    Player1_Candidate = 12,
-    Player1_Seleted = 13,
+    Player_Candidate = 12,
+    Player_Seleted = 13,
 
-    Player0_Candidate = 14,
-    Player0_Seleted = 15,
+    DeckBuilder_Candidate = 14,
+    DeckBuilder_NoHP = 15,
+    DeckBuilder_Siege = 16,
+    DeckBuilder_Ranged = 17,
+    DeckBuilder_Melee_Event = 18,
 
-    DeckBuilder_Candidate = 16,
-    DeckBuilder_NoHP = 17,
-    DeckBuilder_Siege = 18,
-    DeckBuilder_Ranged = 19,
-    DeckBuilder_Melee_Event = 20,
-
-    Main_Menu = 21
+    Main_Menu = 19
 };
 
 enum PushButtonEnum {
-    ESCAPE0,
-    ESCAPE1,
+    ESCAPE,
     BUTTON_PASS,
     SAVEDECK
 };
 
 enum TextLabelEnum {
-    //0~11 for each battlefield
-            Player1_CardChooser_Title = 12,//TODO: why is this link indented?
-    Player0_CardChooser_Title = 13,
-    Player1_Name = 14,
-    Player0_Name = 15,
-    Label_ALL_DeckBuilder = 16,
-    Label_Gold_DeckBuilder = 17,
-    Label_Silver_DeckBuilder = 18,
-    Label_Bronze_DeckBuilder = 19
+    //0~11 for each battlefield//TODO: why is this link indented?
+            Player_CardChooser_Title = 12,
+    Player1_Name = 13,
+    Player0_Name = 14,
+    Label_ALL_DeckBuilder = 15,
+    Label_Gold_DeckBuilder = 16,
+    Label_Silver_DeckBuilder = 17,
+    Label_Bronze_DeckBuilder = 18
 };
 
 const int RoundEndDuration = 3000, GameEndDuration = 6000;//the duration of messagebox presented in msec
 
-const int BUTTON_NUM = 4, LABEL_NUM = 20;
+const int BUTTON_NUM = 3, LABEL_NUM = 19;
 
-enum class Weather {
-    Sunny, Rainy, Foggy, Frozen
+enum Weather {
+    Sunny = 0, Rainy = 1, Foggy = 2, Frozen = 3
 };
-//TODO there should be a linkedit to edit the deck name
+
+const QString WeatherMSG[4] = {
+        "Sunny", "Rainy", "Foggy", "Frozen"
+};
+//TODO there should be a lineedit to edit the deck name
+
+enum class Command {
+    LeftClick, RightClick, Pass, Escape, SaveDeck
+};
 
 #endif //PLAYGWENT_GAMECONSTANT_H_H

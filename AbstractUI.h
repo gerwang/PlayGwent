@@ -19,7 +19,7 @@ public:
     };
 
     enum Scene {
-        MainMenuScene, GameScene, DeckBuilderScene, Player0ChooserScene, Player1ChooserScene
+        MainMenuScene, GameScene, DeckBuilderScene, PlayerChooserScene
     };
 
     virtual void setSource(int row, int column)=0;
@@ -32,7 +32,7 @@ public:
 
     virtual void setPlayerInputState(int player, InputState state)=0;
 
-    virtual void setValidRows(const QList<int> &validRows)=0;
+    virtual void setValidRow(int row)=0;
 
     virtual void resetValidRows()=0;
 
@@ -49,9 +49,11 @@ public:
 
 //    virtual void spawnCard(int toR, int toC, CardInfo *info)=0;
 
-    virtual void getUserInput(QString &clicktype, int &row, int &column, int player)=0;
+    virtual void getUserInput(Command &clicktype, int &row, int &column, int player)=0;
 
-//    virtual void applyWeatherOnRow(Weather weatherType, int row)=0;
+    virtual void setRowWeather(int row, Weather weatherType)=0;
+
+    virtual void clearAllWeatherOnBattlefield()=0;
 
 //    virtual void showSelfDamage(const QList<QPoint> &targets)=0;
 
@@ -92,11 +94,22 @@ public:
 
     virtual void loadCardFromAssets(GameAssets *assets)=0;
 
-signals:
+    virtual void removeCardFromGame(int row, int column)=0;
 
-    void clicked();
+    virtual void showConsume(int fromR, int fromC, int toR, int toC)=0;
+
+    virtual void showSubtractCD(int row, int column)=0;
+
+    virtual void showResumeCD(int row, int column)=0;
+
+    virtual void showBoost(QPoint src, const QList<QPoint> &dests)=0;
+
+    virtual void showDamage(QPoint src, const QList<QPoint> &dests)=0;
+
+    virtual void spawnNewCard(CardInfo *card, int row, int column)=0;
+
     //notify the logic that the interface has received a VALID user input,
-    // but leave rightclick and stopfollow to be judged by logic
+    // but leave rightclick and stopfollow to be judged by logic                obselete
 };
 
 

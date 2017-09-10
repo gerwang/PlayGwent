@@ -3,33 +3,19 @@
 //
 
 #include "GameController.h"
-#include <QFutureWatcher>
-
-template<typename T>
-void GameController::registerProcessor(T *childProcessor) {
-    connect(this, &GameController::afterMoveForUser, childProcessor, &T::slotAfterMoveForUser);
-    connect(this, &GameController::beforeMoveForUser, childProcessor, &T::slotBeforeMoveForUser);
-    connect(this, &GameController::beforeDeploy, childProcessor, &T::slotBeforeDeploy);
-    connect(this, &GameController::onDeploy, childProcessor, &T::slotOnDeploy);
-    connect(this, &GameController::onDeathWish, childProcessor, &T::slotOnDeathWish);
-    connect(this, &GameController::onTurnStart, childProcessor, &T::slotOnTurnStart);
-    connect(this, &GameController::onHandSeleted, childProcessor, &T::slotOnHandSeleted);
-    connect(this, &GameController::afterDeploy, childProcessor, &T::slotAfterDeploy);
-}
+#include "SubclassRegister.h"
 
 void GameController::startGame() {//player use which deck is already choosen
     //for cut line relink, no local variable is permitted
     assets->setPreviousWinner(-1);//-1 means start or draw
     assets->setCurrentRound(0);
     assets->setRoundStart(true);
-    assets->clearWeatherOnAllRows();//TODO make GUI perform the same
-    GameController::getController()->getGameUI()->
-            loadCardFromAssets(GameController::getController()->getAssets());
+    GameController::controller()->getGameUI()->
+            loadCardFromAssets(GameController::controller()->getAssets());
     //TODO modify the test code
     gameUI->switchToScene(AbstractUI::GameScene);
     for (int player = 0; player < 2; player++) {
         assets->setPlayerWinRound(player, 0);
-        assets->setPlayerPass(player, false);
         for (int Round = 0; Round < 3; Round++) {
             assets->setPlayerScore(player, Round, 0);
         }
@@ -59,12 +45,13 @@ void GameController::startGame() {//player use which deck is already choosen
 }
 
 bool GameController::gameLoop() {
-    if (assets->isGameEnd()) {
-        return false;
-    }
     if (assets->isRoundStart()) {//round start not long before
         assets->setRoundStart(false);
-        moveAllFromBattlefieldToGraveyard();//clear the battlefield
+        DestroyAllCardsOnBattlefield();//clear the battlefield
+        clearWeatherOnAllBattlefield();
+        for (int player = 0; player < 2; player++) {
+            assets->setPlayerPass(player, false);//always forget to initialize a new round
+        }
         handleRedrawCard();
         if (assets->getPreviousWinner() == -1) {//start or draw
             gameUI->playRandomCoinAnimation();//let ui play the animation
@@ -88,28 +75,32 @@ bool GameController::gameLoop() {
                     gameUI->setPlayerInputState(currentPlayer, AbstractUI::MustValidTarget);
                     gameUI->setWholeRowValidPositions(assets->getHandIndex(currentPlayer));
                     gameUI->setButtonEnabled(BUTTON_PASS, true);
-                    QString command;
+                    Command command;
                     int row, column;
                     gameUI->getUserInput(command, row, column, currentPlayer);
                     gameUI->setButtonEnabled(BUTTON_PASS, false);
                     gameUI->resetValidPositions();
                     gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
 
-                    if (command == "pass") {
+                    if (command == Command::Pass) {
                         //user choose to pass
                         assets->setHandled(true);// no need to request another user input
                         setPlayerPassAndJudgeRoundEnd(currentPlayer);
-                    } else if (command == "leftclick") {
+                    } else if (command == Command::LeftClick) {
                         //not handle yet, maybe cancelled by right click
                         CardInfo *seletedCard = assets->getCardArray(row).at(column);
-                        emit onHandSeleted(seletedCard);
+                        requestPlayerToPlayFromHand(seletedCard, true);
                     } else {
-                        qWarning() << "unhandled user input:" << command;
+                        qWarning() << "unhandled user input:" << static_cast<int>(command);
                     }
                 }
             }
         }
-        assets->setCurrentPlayer(currentPlayer ^ 1);
+        if (assets->isGameEnd()) {
+            return false;
+        } else {
+            setCurrentPlayerForAssetsAndUI(currentPlayer ^ 1);//play animation, may block
+        }
     }
     return true;
 }
@@ -117,7 +108,9 @@ bool GameController::gameLoop() {
 void GameController::moveCardToRightTop(CardInfo *mover, int targetRow) {
     int row, column;
     assets->getCardPosition(mover, row, column);
-    controllerHandleBeforeMove(mover, row, column);
+
+    controllerHandleBeforeMove(mover, row, targetRow);
+
     assets->getCardPosition(mover, row, column);
 
     performMoveCardToRightTop(row, column, targetRow);
@@ -173,15 +166,13 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
             &seleted = assets->getCardArray(seletedIndex),
             &supplement = assets->getCardArray(supplementIndex);
 
-    int playerChooserTitle = (player == 0 ? Player0_CardChooser_Title : Player1_CardChooser_Title);
-    gameUI->setLabelText(playerChooserTitle, title);//player0 14 player1 15 card chooser title
-    PushButtonEnum playerButton = (player == 0 ? ESCAPE0 : ESCAPE1);
-    gameUI->setButtonEnabled(playerButton, allowEscape);
+    gameUI->setLabelText(Player_CardChooser_Title, title);//player0 14 player1 15 card chooser title
+    gameUI->setButtonEnabled(ESCAPE, allowEscape);
 
     int cardChoosed = 0;
     while (cardChoosed < chooseNum) {
 
-        QString command;
+        Command command;
         int row, column;
         gameUI->setWholeRowValidPositions(candidateIndex);
         gameUI->setPlayerInputState(player, AbstractUI::MustValidTarget);
@@ -189,7 +180,7 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
         gameUI->setPlayerInputState(player, AbstractUI::RejectAll);
         gameUI->resetValidPositions();
 
-        if (command == "leftclick") {//must be a valid input (filtered by UI)
+        if (command == Command::LeftClick) {//must be a valid input (filtered by UI)
             if (row != candidateIndex) {
                 qWarning() << "Invalid input!351468786";
             }
@@ -204,15 +195,15 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
                     performMovePosToPos(supplementIndex, nextColumn, candidateIndex, column);
                 }
             }
-        } else if (command == "rightclick") {
+        } else if (command == Command::RightClick) {
             if (allowSwitchScene) {
                 if (gameUI->getCurrentScene() != AbstractUI::GameScene) {//in local player chooser scene
                     gameUI->switchToScene(AbstractUI::GameScene);
                 } else if (gameUI->getCurrentScene() == AbstractUI::GameScene) {
-                    switchUIToChooserScene(player);//player==localplayer
+                    gameUI->switchToScene(AbstractUI::PlayerChooserScene);
                 }
             }
-        } else if (command == "escape") {//map two buttons to a same command
+        } else if (command == Command::Escape) {//map two buttons to a same command
             //already use a message box to ensure the opearation via UI
             break;
         }
@@ -224,22 +215,22 @@ void GameController::handleRedrawCard() {//handle two players' redraw card
         //add card from deck to hand first
         moveNCardsFromDeckToHand(player, NumberToChoose[assets->getCurrentRound()]);
 
-        switchUIToChooserScene(player);
+        gameUI->switchToScene(AbstractUI::PlayerChooserScene);
 
         //perform move card from hand to candidate
         int handIndex = assets->getHandIndex(player);
-        int candidateIndex = assets->getCandidateIndex(player);
-        performMoveAllCardsFromAToB(handIndex, candidateIndex);
+        performMoveAllCardsFromAToB(handIndex, Player_Candidate);
 
-        int seletedIndex = assets->getSeletedIndex(player);
         int deckIndex = assets->getDeckIndex(player);
-        performChooseCard(candidateIndex, seletedIndex, deckIndex, NumberToRedraw[assets->getCurrentRound()], player,
-                          true, true, true, QString("Please Choose Card to Redraw"));
+        performChooseCard(Player_Candidate, Player_Seleted,
+                          deckIndex, NumberToRedraw[assets->getCurrentRound()], player,
+                          true, true, true, tr("%1 is choosing %2 card(s)").arg(
+                        assets->getPlayerName(player)).arg(NumberToRedraw[assets->getCurrentRound()]));
 
         //insert the seleted randomly to deck
-        performRandomlyMoveAllCardsFromAToB(seletedIndex, deckIndex);
+        performRandomlyMoveAllCardsFromAToB(Player_Seleted, deckIndex);
         //perform move candidate BACK to hand
-        performMoveAllCardsFromAToB(candidateIndex, handIndex);
+        performMoveAllCardsFromAToB(Player_Candidate, handIndex);
 
         gameUI->switchToScene(AbstractUI::GameScene);
     }
@@ -261,16 +252,6 @@ void GameController::performMoveAllCardsFromAToB(int fromR, int toR) {//must fol
 void GameController::performMoveCardToRightTop(int row, int column, int targetRow) {
     int targetColumn = assets->getCardArray(targetRow).size();//to right top
     performMovePosToPos(row, column, targetRow, targetColumn);
-}
-
-void GameController::switchUIToChooserScene(int player) {
-    if (player == 0) {
-        gameUI->switchToScene(AbstractUI::Player0ChooserScene);
-    } else if (player == 1) {
-        gameUI->switchToScene(AbstractUI::Player1ChooserScene);
-    } else {
-        qWarning() << "Error!235832549";
-    }
 }
 
 void GameController::moveNCardsFromDeckToHand(int player, int n) {
@@ -320,6 +301,8 @@ void GameController::setPlayerPassAndJudgeRoundEnd(int currentPlayer) {
             assets->addPlayerWinRound(localPlayer);
             assets->setPreviousWinner(localPlayer);
         }
+        message += tr("\n%1 : %2\n%3 %4").arg(assets->getPlayerName(0)).arg(assets->getPlayerName(1)).arg(
+                combatValue[0]).arg(combatValue[1]);
 
         gameUI->execMessageBox(tr("Round Ended"), message, RoundEndDuration);
         assets->addCurrentRound();
@@ -327,11 +310,11 @@ void GameController::setPlayerPassAndJudgeRoundEnd(int currentPlayer) {
     }
 }
 
-void GameController::moveAllFromBattlefieldToGraveyard() {
+void GameController::DestroyAllCardsOnBattlefield() {//some Doomed card should be removed from game
     for (int row = Player1_Siege; row <= Player0_Siege; row++) {//all battlefield
         while (!assets->getCardArray(row).empty()) {
             CardInfo *mover = assets->getCardArray(row).last();
-            moveToGraveyard(mover);
+            DestroyCard(mover);
         }
     }
 }
@@ -339,6 +322,7 @@ void GameController::moveAllFromBattlefieldToGraveyard() {
 void GameController::moveToGraveyard(CardInfo *mover) {
     int row, column;
     assets->getCardPosition(mover, row, column);
+    mover->resetAttributes();
     if (row <= Player1_Melee) {//player1's card
         moveCardToRightTop(mover, Player1_Graveyard);
     } else {
@@ -364,10 +348,250 @@ GameAssets *GameController::getAssets() const {
 
 GameController *GameController::mainController = nullptr;
 
-GameController *GameController::getController() {
+GameController *GameController::controller() {
     if (mainController == nullptr) {
         mainController = new GameController();
         registerSubclasses();
     }
     return mainController;
 }
+
+void GameController::defaultHandleHand(CardInfo *seletedCard, bool allowCancel) {
+    //default behavior: choose the row and pick it
+    int currentPlayer = assets->getCurrentPlayer();
+    int fromR, fromC;
+    assets->getCardPosition(seletedCard, fromR, fromC);
+    gameUI->setSource(fromR, fromC);
+
+
+    //set valid rows
+    int targetPlayer = currentPlayer;
+    if (seletedCard->getLoyalty() == CardInfo::Disloyal) {
+        targetPlayer = currentPlayer ^ 1;
+    }
+
+    while (true) {
+        switch (seletedCard->getRow()) {
+            case CardInfo::Event:
+                gameUI->setValidRow(assets->getPlayerMelee(targetPlayer));
+                gameUI->setValidRow(assets->getPlayerRanged(targetPlayer));
+                gameUI->setValidRow(assets->getPlayerSiege(targetPlayer));
+                break;
+            case CardInfo::Melee:
+                gameUI->setValidRow(assets->getPlayerMelee(targetPlayer));
+                break;
+            case CardInfo::Ranged:
+                gameUI->setValidRow(assets->getPlayerRanged(targetPlayer));
+                break;
+            case CardInfo::Siege:
+                gameUI->setValidRow(assets->getPlayerSiege(targetPlayer));
+                break;
+            default:
+                qWarning() << "invalid Row Card info!1238764";
+        }
+        gameUI->setPlayerInputState(currentPlayer, AbstractUI::MustValidRow);
+        Command command;
+        int toR, toC;
+        gameUI->getUserInput(command, toR, toC, currentPlayer);
+        gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
+        gameUI->resetValidRows();
+
+        if (command == Command::RightClick) {
+            //user try to cancel
+            if (allowCancel) {//allow cancel,user will choose another card
+                gameUI->releaseSource();
+                break;
+            }
+        } else if (command == Command::LeftClick) {
+            assets->setHandled(true);
+            //meaningful input
+            gameUI->releaseSource();//when choose position,before move we should release the SOURCE visual effect
+            moveCardToPos(seletedCard, toR, toC);
+            break;
+        }
+    }
+}
+
+void GameController::clearWeatherOnAllBattlefield() {
+    for (int row = Player1_Siege; row <= Player0_Siege; row++) {
+        assets->setRowWeather(row, Weather::Sunny);
+    }
+    gameUI->clearAllWeatherOnBattlefield();
+}
+
+void GameController::DestroyCard(CardInfo *card) {
+    if (assets->cardAlreadyInGraveyard(card)) {
+        removeCardFromGame(card);
+    } else {
+        moveToGraveyard(card);
+        if (card->hasAttribute("Doomed")) {
+            removeCardFromGame(card);
+        }
+    }
+}
+
+void GameController::removeCardFromGame(CardInfo *card) {
+    int row, column;
+    assets->getCardPosition(card, row, column);
+    gameUI->removeCardFromGame(row, column);//must perform before
+    assets->removeCardFromGame(row, column);
+}
+
+void GameController::Consume(CardInfo *consumer, CardInfo *food) {
+    //do not destroy the food here, let processor to destroy it later
+    int nutrition = food->getCurrentStrength();
+    //user the pointer only, no need to access the asset
+    consumer->setCurrentStrength(consumer->getCurrentStrength() + nutrition);
+    food->setCurrentStrength(0);
+    emit onConsume(consumer, food);//the gameUI hasn't update the screen, no one can see or know time difference
+
+    int fromR, fromC, toR, toC;
+    assets->getCardPosition(consumer, fromR, fromC);
+    assets->getCardPosition(food, toR, toC);
+    gameUI->showConsume(fromR, fromC, toR, toC);
+    emit afterConsume(consumer, food);
+}
+
+void GameController::subtractCD(CardInfo *unit) {
+    unit->setCD(unit->getCD() - 1);
+    int row, column;
+    assets->getCardPosition(unit, row, column);
+    gameUI->showSubtractCD(row, column);
+}
+
+void GameController::resumeCD(CardInfo *unit, int initialCD) {
+    unit->setCD(initialCD);
+    int row, column;
+    assets->getCardPosition(unit, row, column);
+    gameUI->showResumeCD(row, column);
+}
+
+void GameController::boostFromSrcToDests(CardInfo *src, const QList<CardInfo *> &dests, int boost, int armor) {
+    for (auto dest:dests) {
+        dest->setArmor(dest->getArmor() + armor);
+        dest->setCurrentStrength(dest->getCurrentStrength() + boost);
+    }
+    //no card listens to boost
+    int row, column;
+    QPoint srcPoint;
+    if (src != nullptr) {
+        assets->getCardPosition(src, row, column);
+        srcPoint = QPoint(row, column);
+    } else {
+        srcPoint = QPoint(-1, -1);
+    }
+    QList<QPoint> destPoints;
+    for (auto dest:dests) {
+        assets->getCardPosition(dest, row, column);
+        destPoints.append(QPoint(row, column));
+    }
+    gameUI->showBoost(srcPoint, destPoints);
+}
+
+void GameController::damageFromSrcToDests(CardInfo *src, const QList<CardInfo *> &dests, int damage, bool armorUseful) {
+    for (auto dest:dests) {
+        int tempDamage = damage;
+        if (dest->isShield()) {//has a shield
+            dest->setShield(false);
+        } else {
+            if (armorUseful) {
+                int resist = std::min(tempDamage, dest->getArmor());
+                tempDamage -= resist;
+                dest->setArmor(dest->getArmor() - resist);
+            }
+            tempDamage = std::min(tempDamage, dest->getCurrentStrength());
+            dest->setCurrentStrength(dest->getCurrentStrength() - tempDamage);
+        }
+    }
+
+    int row, column;
+    QPoint srcPoint;
+    if (src != nullptr) {
+        assets->getCardPosition(src, row, column);
+        srcPoint = QPoint(row, column);
+    } else {
+        srcPoint = QPoint(-1, -1);
+    }
+    QList<QPoint> destPoints;
+    for (auto dest:dests) {
+        assets->getCardPosition(dest, row, column);
+        destPoints.append(QPoint(row, column));
+    }
+    gameUI->showDamage(srcPoint, destPoints);
+
+    for (auto dest:dests) {//check if someone should be destroyed
+        if (dest->getCurrentStrength() == 0) {
+            DestroyCard(dest);
+        }
+    }
+}
+
+void
+GameController::spawnCardToPosByPlayer(CardInfo *card, int row, int column,//the card must be a new constructed instance
+                                       int player) {//the player who triggered this operation
+    assets->getCardArray(row).insert(column, card);
+    gameUI->spawnNewCard(card, row, column);
+    if (assets->isBattleField(row)) {
+        controllerHandleDeploy(card, assets->getDeckIndex(player), row);//trigger deploy
+    }
+}
+
+void
+GameController::handleHandValidPosition(CardInfo *seletedCard, bool allowCancel, const QList<QPoint> &validPositions,
+                                        Command &command, int &toR, int &toC) {
+    int currentPlayer = assets->getCurrentPlayer();
+    int fromR, fromC;
+    assets->getCardPosition(seletedCard, fromR, fromC);
+    gameUI->setSource(fromR, fromC);
+
+    while (true) {
+        gameUI->setValidPositions(validPositions);
+        gameUI->setPlayerInputState(currentPlayer, AbstractUI::MustValidTarget);
+
+        gameUI->getUserInput(command, toR, toC, currentPlayer);
+        gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
+        gameUI->resetValidPositions();
+
+        if (command == Command::RightClick) {
+            if (allowCancel) {
+                gameUI->releaseSource();
+                break;
+            }
+        } else if (command == Command::LeftClick) {
+            assets->setHandled(true);
+            gameUI->releaseSource();
+            break;
+        }
+    }
+}
+
+void GameController::requestPlayerToPlayFromHand(CardInfo *seletedCard, bool allowCancel) {
+    emit onHandSeleted(seletedCard, allowCancel);
+}
+
+void GameController::changeRowWeather(int row, Weather weatherType) {
+    Weather oldWeather = assets->getRowWeather(row);
+    assets->setRowWeather(row, weatherType);
+    gameUI->setRowWeather(row, weatherType);
+    emit afterWeatherChanged(row, oldWeather);
+}
+
+void GameController::causeWeatherDamage(int row, const QList<CardInfo *> &dests, int damage, bool armorUseful) {
+    emit onWeatherDamage(row, dests);
+    damageFromSrcToDests(nullptr, dests, damage, armorUseful);
+}
+
+void GameController::DestroySpecialCard(CardInfo *specialCard, int fromR) {
+    if (assets->cardAlreadyInGraveyard(specialCard)) {
+        removeCardFromGame(specialCard);
+    } else {
+        int fromPlayer = assets->whosePlayerRow(fromR);
+        int graveyardIndex = (fromPlayer == 0 ? Player0_Graveyard : Player1_Graveyard);
+        moveCardToRightTop(specialCard, graveyardIndex);
+        if (specialCard->hasAttribute("Doomed")) {
+            removeCardFromGame(specialCard);
+        }
+    }
+}
+
+

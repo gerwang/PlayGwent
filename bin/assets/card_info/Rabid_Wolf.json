@@ -1,0 +1,14 @@
+{
+  "cardName": "Rabid_Wolf",
+  "attributes": [],
+  "infomation": "",
+  "initialStrength": 1,
+  "currentStrength": 1,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Melee",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

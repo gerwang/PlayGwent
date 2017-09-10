@@ -29,16 +29,14 @@ ConsoleView::ConsoleView(QObject *parent) {
                                     mainwindow->ui->label_16,
                                     mainwindow->ui->label_17,
                                     mainwindow->ui->label_18,
-                                    mainwindow->ui->label_19,
-                                    mainwindow->ui->label_20,};
+                                    mainwindow->ui->label_19};
     for (int i = 0; i < LABEL_NUM; i++) {
         pQLabel[i] = tempLabel[i];
     }
     pLineEdit = mainwindow->ui->lineEdit;
     QPushButton *tempButton[BUTTON_NUM] = {mainwindow->ui->pushButton,
                                            mainwindow->ui->pushButton_2,
-                                           mainwindow->ui->pushButton_3,
-                                           mainwindow->ui->pushButton_4};
+                                           mainwindow->ui->pushButton_3};
     for (int i = 0; i < BUTTON_NUM; i++) {
         pQPushButton[i] = tempButton[i];
     }
@@ -66,14 +64,12 @@ ConsoleView::~ConsoleView() {
 void ConsoleView::setSource(int row, int column) {
     source = QPoint(row, column);
     textBrowser->append(
-            tr("set source (%1, %2, %3)\n").arg(row).arg(column).arg(cardslots[row][column]->getCardName()));
-    display();
+            tr("set source (%1, %2, %3)").arg(row).arg(column).arg(cardslots[row][column]->getCardName()));
 }
 
 void ConsoleView::releaseSource() {
     source = QPoint(-1, -1);//the dummy value -1
     textBrowser->append(tr("source removed"));
-    display();
 }
 
 /*
@@ -101,12 +97,6 @@ void ConsoleView::setUIState(AbstractUI::State state) {
             tr("current state switched: %1").arg(QMetaEnum::fromType<State>().valueToKey(state)));
 }
  */
-
-void ConsoleView::setValidRows(const QList<int> &validRows) {
-    for (auto row:validRows) {
-        validRow[row] = true;
-    }
-}
 
 void ConsoleView::resetValidRows() {
     for (bool &i : validRow) {
@@ -139,7 +129,7 @@ void ConsoleView::setLabelText(int index, QString text) {
 }
 
 QString ConsoleView::getCardInfoString(CardInfo *info) {
-    const char *nameColor[] = {"chocolate", "silver", "orange", "gray"};
+    const char *nameColor[] = {"chocolate", "silver", "orange", "gold"};
     QString nameField =
             tr("<font color=\"") + tr(nameColor[info->getType()]) + tr("\">") + info->getCardName() + tr("</font>");
     const char *strenghColor[] = {"red", "black", "green"};
@@ -167,8 +157,13 @@ QString ConsoleView::getCardInfoString(CardInfo *info) {
 }
 
 void ConsoleView::displayCardSlotInfo(int row) {
-    QString result = tr("<font color=\"orangered\">[") + QString::number(row) + tr("] ") + CardSlotMSG[row] +
+    QString RowIndexColor[2] = {"green", "red"};
+    QString result = tr("<font color=\"%1\">[").arg(RowIndexColor[validRow[row]]) + QString::number(row) + tr("] ") +
+                     CardSlotMSG[row] +
                      tr("</font>: ");
+    if (rowWeather[row] != Weather::Sunny) {
+        result += WeatherMSG[rowWeather[row]];
+    }
     for (int column = 0; column < cardslots[row].size(); column++) {
         QString validColor[2] = {"green", "red"};
         QString columnStr = tr("<font color=\"%1\">[%2]</font>").arg(validColor[posBoolValid[row][column]]).arg(column);
@@ -222,7 +217,7 @@ void ConsoleView::spawnCard(int toR, int toC, CardInfo *info) {
 */
 void ConsoleView::moveCard(QList<CardInfo *> &fromSlot, int fromIndex, QList<CardInfo *> &toSlot, int toIndex) {
     if (&fromSlot == &toSlot) {
-        qDebug() << "same slot! 65468435";//consider gell, he is okay now
+        qDebug() << "same slot! 65468435" << fromIndex << toIndex;//consider gell, he is okay now
     }
     CardInfo *mover = fromSlot[fromIndex];
     fromSlot.removeAt(fromIndex);
@@ -232,7 +227,6 @@ void ConsoleView::moveCard(QList<CardInfo *> &fromSlot, int fromIndex, QList<Car
     toSlot.insert(toIndex, mover);
 
 //    textBrowser->append(tr("animation moving\n"));//TODO: finally some card will have front side and back side
-    display();
 }
 
 /*
@@ -301,19 +295,21 @@ void ConsoleView::showSelfDamage(const QList<QPoint> &targets) {
     }
     textBrowser->append("\n");
 }
-
-void ConsoleView::showDamage(QPoint source, const QList<QPoint> &targets) {
+*/
+void ConsoleView::showDamage(QPoint src, const QList<QPoint> &dests) {
     //play the animation parallelly
-    textBrowser->append(tr("damage source: (%1,%2,%3)\n").arg(source.x()).arg(source.y()).arg(
-            cardslots[source.x()][source.y()]->getCardName()));
-    textBrowser->append("damage target list: ");
-    for (auto &target:targets) {
-        textBrowser->append(
-                tr("(%1,%2,%3)").arg(target.x()).arg(target.y()).arg(cardslots[target.x()][target.y()]->getCardName()));
+    if (src != QPoint(-1, -1)) {
+        textBrowser->append(tr("damage src: (%1,%2,%3)").arg(src.x()).arg(src.y()).arg(
+                cardslots[src.x()][src.y()]->getCardName()));
     }
-    textBrowser->append("\n");
+    QString line = tr("damage target list: ");
+    for (auto &target:dests) {
+        line += tr("(%1,%2,%3)").arg(target.x()).arg(target.y()).arg(cardslots[target.x()][target.y()]->getCardName());
+    }
+    textBrowser->append(line);
 }
 
+/*
 void ConsoleView::showSelfBoost(const QList<QPoint> &targets) {
     //play the animation parallel
     textBrowser->append("self boost: ");
@@ -323,20 +319,22 @@ void ConsoleView::showSelfBoost(const QList<QPoint> &targets) {
     }
     textBrowser->append("\n");
 }
-
-void ConsoleView::showBoost(QPoint source, const QList<QPoint> &targets) {
+*/
+void ConsoleView::showBoost(QPoint src, const QList<QPoint> &dests) {
     //play the animation parallelly
-    textBrowser->append(tr("boost source: (%1,%2,%3)\n").arg(source.x()).arg(source.y()).arg(
-            cardslots[source.x()][source.y()]->getCardName()));
-    textBrowser->append("boost target list: ");
-    for (auto &target:targets) {
-        textBrowser->append(
-                tr("(%1,%2,%3) ").arg(target.x()).arg(target.y()).arg(
-                        cardslots[target.x()][target.y()]->getCardName()));
+    if (src != QPoint(-1, -1)) {//really has a source
+        textBrowser->append(tr("boost src: (%1,%2,%3)").arg(src.x()).arg(src.y()).arg(
+                cardslots[src.x()][src.y()]->getCardName()));
     }
-    textBrowser->append("\n");
+    QString line = tr("boost target list: ");
+    for (auto &target:dests) {
+        line += tr("(%1,%2,%3) ").arg(target.x()).arg(target.y()).arg(
+                cardslots[target.x()][target.y()]->getCardName());
+    }
+    textBrowser->append(line);
 }
 
+/*
 void ConsoleView::showSwallow(QPoint source, const QList<QPoint> &targets) {
     //play the animation parallelly
     textBrowser->append(tr("swallow source: (%1,%2,%3)\n").arg(source.x()).arg(source.y()).arg(
@@ -351,7 +349,7 @@ void ConsoleView::showSwallow(QPoint source, const QList<QPoint> &targets) {
 */
 void ConsoleView::setCurrentPlayer(int player) {
     currentPlayer = player;
-    textBrowser->append(tr("flipping player turn coin animation: %1\n").arg(currentPlayer));
+    textBrowser->append(tr("flipping player turn coin animation: %1").arg(currentPlayer));
 }
 
 void ConsoleView::setLocalPlayer(int player) {
@@ -365,10 +363,10 @@ void ConsoleView::setWholeRowValidPositions(int row) {
 }
 
 void ConsoleView::playRandomCoinAnimation() {
-    textBrowser->append(tr("Playing random Coin Animation\n"));
+    textBrowser->append(tr("Playing random Coin Animation"));
 }
 
-void ConsoleView::getUserInput(QString &clicktype, int &row, int &column, int player) {
+void ConsoleView::getUserInput(Command &clicktype, int &row, int &column, int player) {
     textBrowser->append(tr("the current input state is %1").arg(InputStateMSG[playerInputState[player]]));
     display();
     inputBuffer[player]->getUserInput(clicktype, row, column);
@@ -381,7 +379,6 @@ void ConsoleView::setButtonEnabled(int button, bool enabled) {
 void ConsoleView::switchToScene(AbstractUI::Scene nextScene) {
     textBrowser->append(tr("switch Scene from %1 to %2").arg(SceneMSG[currentScene]).arg(SceneMSG[nextScene]));
     currentScene = nextScene;
-    display();
 }
 
 int ConsoleView::getLocalPlayer() {
@@ -418,6 +415,10 @@ void ConsoleView::loadCardFromAssets(GameAssets *assets) {
     }
 }
 
+void ConsoleView::setValidRow(int row) {
+    validRow[row] = true;
+}
+
 /*
 void ConsoleView::showTimer(double timeleft) {//this function should NOT block
     //initially there is not timer TODO: add a timer
@@ -426,10 +427,44 @@ void ConsoleView::showTimer(double timeleft) {//this function should NOT block
 void ConsoleView::clearTimer() {
 
 }
+*/
 
-void ConsoleView::applyWeatherOnRow(Weather weathertype, int row) {
-    textBrowser->append(tr("weather on row %1 changed from %2 to %3\n").arg(row).arg(rowWeather[row]).arg(
-            weathertype));//TODO: check if the enum can be outputed normally
+void ConsoleView::setRowWeather(int row, Weather weathertype) {
+    textBrowser->append(tr("weather on row %1 changed from %2 to %3").arg(row).arg(WeatherMSG[rowWeather[row]]).arg(
+            WeatherMSG[weathertype]));
     rowWeather[row] = weathertype;
 }
- */
+
+void ConsoleView::removeCardFromGame(int row, int column) {
+    textBrowser->append(
+            tr("remove (%1,%2,%3) from game").arg(row).arg(column).arg(cardslots[row][column]->getCardName()));
+    posBoolValid[row].removeAt(column);
+    cardslots[row].removeAt(column);
+}
+
+void ConsoleView::showConsume(int fromR, int fromC, int toR, int toC) {
+    textBrowser->append(tr("(%1,%2,%3) is consuming (%4,%5,%6)").arg(fromR).arg(fromC).arg(
+            cardslots[fromR][fromC]->getCardName()).arg(toR).arg(toC).arg(cardslots[toR][toC]->getCardName()));
+}
+
+void ConsoleView::showSubtractCD(int row, int column) {
+    textBrowser->append(
+            tr("(%1,%2,%3) CD subtracting").arg(row).arg(column).arg(cardslots[row][column]->getCardName()));
+}
+
+void ConsoleView::showResumeCD(int row, int column) {
+    textBrowser->append(tr("(%1,%2,%3) CD resuming").arg(row).arg(column).arg(cardslots[row][column]->getCardName()));
+}
+
+void ConsoleView::spawnNewCard(CardInfo *card, int row, int column) {
+    cardslots[row].insert(column, card);
+    posBoolValid[row].insert(column, false);
+    textBrowser->append(tr("spawn at (%1,%2,%3)").arg(row).arg(column).arg(card->getCardName()));
+}
+
+void ConsoleView::clearAllWeatherOnBattlefield() {
+    for (int row = Player1_Siege; row <= Player0_Siege; row++) {
+        rowWeather[row] = Sunny;
+    }
+}
+

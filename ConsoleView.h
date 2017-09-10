@@ -30,7 +30,7 @@ public:
 
 //    void setUIState(State state) override;
 
-    void setValidRows(const QList<int> &validRows) override;
+    void setValidRow(int row) override;
 
     void resetValidRows() override;
 
@@ -49,12 +49,12 @@ public:
 
 //    void spawnCard(int toR, int toC, CardInfo *info) override;
 
-    void getUserInput(QString &clicktype, int &row, int &column, int player) override;
+    void getUserInput(Command &clicktype, int &row, int &column, int player) override;
 
 //    void showSelfDamage(const QList<QPoint> &targets) override;
 
-//    void showDamage(QPoint source,
-//                    const QList<QPoint> &targets) override;//show damage visual effects(animations) from source to MULTIPLE targets
+    void showDamage(QPoint src,
+                    const QList<QPoint> &dests) override;//show damage visual effects(animations) from source to MULTIPLE targets
 
 //    void showSelfBoost(const QList<QPoint> &targets) override;
 
@@ -77,8 +77,9 @@ public:
 
     void display();
 
-//    void applyWeatherOnRow(Weather weathertype, int row);
+    void setRowWeather(int row, Weather weathertype) override;
 
+    void clearAllWeatherOnBattlefield() override;
 
     void setWholeRowValidPositions(int row) override;
 
@@ -98,11 +99,23 @@ public:
 
     void loadCardFromAssets(GameAssets *assets) override;
 
-private:
-    InputState playerInputState[2];// for each player
-    ConsoleWindow *mainwindow;
+    void removeCardFromGame(int row, int column) override;
 
-    AbstractIOBuffer *inputBuffer[2];
+    void showConsume(int fromR, int fromC, int toR, int toC) override;
+
+    void showSubtractCD(int row, int column) override;
+
+    void showResumeCD(int row, int column) override;
+
+    void showBoost(QPoint src, const QList<QPoint> &dests) override;
+
+    void spawnNewCard(CardInfo *card, int row, int column) override;
+
+private:
+    InputState playerInputState[2]{};// for each player
+    ConsoleWindow *mainwindow{};
+
+    AbstractIOBuffer *inputBuffer[2]{};
 
     QPoint source;
     QList<QPoint> targets;
@@ -110,19 +123,19 @@ private:
     Scene currentScene;
 
     QList<CardInfo *> cardslots[ROW_NUM];
-    Weather rowWeather[ROW_NUM];
+    Weather rowWeather[ROW_NUM]{};
 
     QList<bool> posBoolValid[ROW_NUM];
-    bool validRow[ROW_NUM];
+    bool validRow[ROW_NUM]{};
 
-    QLabel *pQLabel[20];
-    QPushButton *pQPushButton[4];
-    QLineEdit *pLineEdit;
+    QLabel *pQLabel[LABEL_NUM]{};
+    QPushButton *pQPushButton[BUTTON_NUM]{};
+    QLineEdit *pLineEdit{};
 
-    QTextBrowser *textBrowser;
+    QTextBrowser *textBrowser{};
 
-    int currentPlayer;
-    int localPlayer;
+    int currentPlayer{};
+    int localPlayer{};
 };
 
 

@@ -1,0 +1,17 @@
+{
+  "cardName": "Crone_Whispess",
+  "attributes": [
+    "Mage",
+    "Relict"
+  ],
+  "infomation": "Deploy: Play Weavess and Brewess from your Deck.",
+  "initialStrength": 6,
+  "currentStrength": 6,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Siege",
+  "type": "Silver",
+  "CD": -1,
+  "shield": false
+}

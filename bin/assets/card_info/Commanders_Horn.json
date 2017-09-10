@@ -1,0 +1,17 @@
+{
+  "cardName": "Commanders_Horn",
+  "attributes": [
+    "Special",
+    "Tactic"
+  ],
+  "infomation": "Boost 5 adjacent Units by 4.",
+  "initialStrength": 0,
+  "currentStrength": 0,
+  "armor": 0,
+  "faction": "Neutral",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Silver",
+  "CD": -1,
+  "shield": false
+}

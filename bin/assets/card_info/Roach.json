@@ -1,0 +1,14 @@
+{
+  "cardName": "Roach",
+  "attributes": [],
+  "infomation": "Whenever you play a Gold card from your Hand (note: does not include Leaders), play Roach from your Deck on a random row before that card resolves.",
+  "initialStrength": 4,
+  "currentStrength": 4,
+  "armor": 0,
+  "faction": "Neutral",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Silver",
+  "CD": -1,
+  "shield": false
+}

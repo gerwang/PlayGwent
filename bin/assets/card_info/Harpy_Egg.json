@@ -1,0 +1,16 @@
+{
+  "cardName": "Harpy_Egg",
+  "attributes": [
+    "Doomed"
+  ],
+  "infomation": "When Consumed by another Unit, Boost that Unit by an additional 4. Deathwish: Spawn a Harpy Hatchling on a random row.",
+  "initialStrength": 1,
+  "currentStrength": 1,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

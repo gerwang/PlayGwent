@@ -181,26 +181,6 @@ bool GameAssets::listContainsName(const QList<CardInfo *> &list, const QString &
     return false;
 }
 
-int GameAssets::getCandidateIndex(int player) {
-    if (player == 0) {
-        return Player0_Candidate;
-    } else if (player == 1) {
-        return Player1_Candidate;
-    } else {
-        qWarning() << "invalid player!2q894371309845";
-    }
-}
-
-int GameAssets::getSeletedIndex(int player) {
-    if (player == 0) {
-        return Player0_Seleted;
-    } else if (player == 1) {
-        return Player1_Seleted;
-    } else {
-        qWarning() << "invalid player!2q894371309845";
-    }
-}
-
 bool GameAssets::isPlayerHandEmpty(int player) {
     int handIndex = getHandIndex(player);
     return cardarray[handIndex].empty();
@@ -248,15 +228,10 @@ void GameAssets::addCurrentRound() {
     currentRound++;
 }
 
-void GameAssets::clearWeatherOnAllRows() {
-    for (int i = 0; i < ROW_NUM; i++) {
-        rowWeather[i] = Weather::Sunny;
-    }
-}
-
 void GameAssets::clearAllGameRows() {
     for (int row = Player1_Graveyard; row <= Player0_Graveyard; row++) {
         cardarray[row].clear();
+        rowWeather[row] = Weather::Sunny;
     }
 }
 
@@ -278,5 +253,91 @@ void GameAssets::createCardsRandomlyOnNameListToRow(QList<QString> namelist, int
         //WARNING: FIND BUG: cardarray means &cardarray[0]!!
     }
 }
+
+int GameAssets::getEnemySameRowNumber(int rowNumber) {
+    return Player0_Graveyard - rowNumber;
+}
+
+int GameAssets::getPlayerMelee(int player) {
+    return player == 0 ? Player0_Melee : Player1_Melee;
+}
+
+int GameAssets::getPlayerRanged(int player) {
+    return player == 0 ? Player0_Ranged : Player1_Ranged;
+}
+
+int GameAssets::getPlayerSiege(int player) {
+    return player == 0 ? Player0_Siege : Player1_Siege;
+}
+
+void GameAssets::updateRowStrongest(int row, QList<CardInfo *> &result, CardInfo *exclude) {
+    for (auto info:cardarray[row]) {
+        if (info == exclude) {
+            continue;
+        } else if (result.empty()) {
+            result.append(info);
+        } else if (info->getCurrentStrength() > result.first()->getCurrentStrength()) {
+            result.clear();
+            result.append(info);
+        } else if (info->getCurrentStrength() == result.first()->getCurrentStrength()) {
+            result.append(info);
+        }
+    }
+}
+
+void GameAssets::removeCardFromGame(int row, int column) {
+    CardInfo *temp = cardarray[row].takeAt(column);
+    temp->deleteLater();//use deletelater to provide a safer way
+}
+
+bool GameAssets::cardAlreadyInGraveyard(CardInfo *card) {
+    return cardarray[Player0_Graveyard].contains(card) ||
+           cardarray[Player1_Graveyard].contains(card);
+}
+
+int GameAssets::whosePlayerRow(int row) {
+    if (Player0_Melee <= row && row <= Player0_Graveyard) {
+        return 0;
+    } else if (Player1_Graveyard <= row && row <= Player1_Melee) {
+        return 1;
+    } else {
+        return -1;
+    }
+}
+
+int GameAssets::playerBattlefieldBegin(int player) {
+    return player == 0 ? Player0_Melee : Player1_Siege;
+}
+
+int GameAssets::playerBattlefieldEnd(int player) {
+    return player == 0 ? Player0_Siege : Player1_Melee;
+}
+
+bool GameAssets::isCardOnBattlefield(CardInfo *card) {
+    for (int row = Player1_Siege; row <= Player0_Siege; row++) {
+        if (cardarray[row].contains(card)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void GameAssets::updateRowWeakest(int row, QList<CardInfo *> &result, CardInfo *exclude) {
+    for (auto info:cardarray[row]) {
+        if (info == exclude) {
+            continue;
+        } else if (result.empty()) {
+            result.append(info);
+        } else if (info->getCurrentStrength() < result.first()->getCurrentStrength()) {
+            result.clear();
+            result.append(info);
+        } else if (info->getCurrentStrength() == result.first()->getCurrentStrength()) {
+            result.append(info);
+        }
+    }
+}
+
+
+
 
 //you should always perform MOVE instead of REMOVE, case REMOVE is a really serios thing

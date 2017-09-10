@@ -1,0 +1,19 @@
+{
+  "cardName": "Dagon",
+  "attributes": [
+    "Doomed",
+    "Stubborn",
+    "Leader",
+    "Vodyanoi"
+  ],
+  "infomation": "Deploy: Spawn Biting Frost, Impenetrable Fog or Torrential Rain.",
+  "initialStrength": 6,
+  "currentStrength": 6,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Leader",
+  "CD": -1,
+  "shield": false
+}

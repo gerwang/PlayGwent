@@ -8,18 +8,51 @@ int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
 //    ConsoleWindow w;
 //    w.show();
-    GameController::getController()->setAssets(new GameAssets);
-    GameController::getController()->setGameUI(new ConsoleView);
+    QList<QString> completed;
+    completed
+//            << "Geralt_Igni"
+//            << "Arachas"
+            //            << "Roach"
+//            << "Vran_Warrior"
+//            << "Arachas_Behemoth"
+            //            << "Thunderbolt_Potion"
+            //            << "Commanders_Horn"
+//            << "Lacerate"
+            //            << "Harpy_Egg"
+            //            << "Celaeno_Harpy"
+            //            << "Earth_Elemental"
+            //            << "Crone_Brewess"
+            //            << "Crone_Weavess"
+            //            << "Crone_Whispess"
+            //            << "Unseen_Elder"
+            //            << "Frightener"
+            //            << "Geels"
+            //            << "Bekkers_Twisted_Mirror"
+            //            << "Rally"
+            << "Biting_Frost"
+            //            << "Impenetrable_Fog"
+            //            << "Torrential_Rain"
+            //            << "Clear_Skies"
+            //            << "First_Light"
+            << "Dagon"
+            << "Foglet"
+            << "Woodland_Spirit"
+            << "Archgriffin"
+            << "Wild_Hunt_Rider"
+            << "Caranthir";
+
+    GameController::controller()->setAssets(new GameAssets);
+    GameController::controller()->setGameUI(new ConsoleView);
     QList<QString> zeroNames, oneNames;
     for (int i = 0; i < 15; i++) {
-        zeroNames << "Geralt_Igni";
-        oneNames << "Geralt_Igni";
+        zeroNames << completed[qrand() % completed.size()];
+        oneNames << completed[qrand() % completed.size()];
     }
-    GameController::getController()->getAssets()->setRandomSeed(233);
-    GameController::getController()->getAssets()->loadPlayerDeck(zeroNames, oneNames);
-    GameController::getController()->getAssets()->setPlayerName(0, QString("Player0"));
-    GameController::getController()->getAssets()->setPlayerName(1, QString("Player1"));
-    GameController::getController()->getGameUI()->setLocalPlayer(0);
-    GameController::getController()->startGame();
+    GameController::controller()->getAssets()->setRandomSeed(234);
+    GameController::controller()->getAssets()->loadPlayerDeck(zeroNames, oneNames);
+    GameController::controller()->getAssets()->setPlayerName(0, QString("Player0"));
+    GameController::controller()->getAssets()->setPlayerName(1, QString("Player1"));
+    GameController::controller()->getGameUI()->setLocalPlayer(0);
+    GameController::controller()->startGame();
     return a.exec();
 }

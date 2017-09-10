@@ -1,0 +1,17 @@
+{
+  "cardName": "Torrential_Rain",
+  "attributes": [
+    "Special",
+    "Weather"
+  ],
+  "infomation": "Apply Rain to a row on your opponent's side. Rain: Every turn, at the start of your turn, Damage up to 2 random Units on the row by 1.",
+  "initialStrength": 0,
+  "currentStrength": 0,
+  "armor": 0,
+  "faction": "Neutral",
+  "loyalty": "Disloyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

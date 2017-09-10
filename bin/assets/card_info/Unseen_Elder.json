@@ -1,0 +1,19 @@
+{
+  "cardName": "Unseen_Elder",
+  "attributes": [
+    "Leader",
+    "Vampire",
+    "Doomed",
+    "Stubborn"
+  ],
+  "infomation": "Deploy: Consume an Ally, but Strengthen instead of Boosting. Repeat 2 times.",
+  "initialStrength": 5,
+  "currentStrength": 5,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Leader",
+  "CD": -1,
+  "shield": false
+}

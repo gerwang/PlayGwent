@@ -1,0 +1,18 @@
+{
+  "cardName": "Harpy_Hatchling",
+  "attributes": [
+    "Beast",
+    "Doomed"
+  ],
+  "infomation": "",
+  //really nothing
+  "initialStrength": 1,
+  "currentStrength": 1,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

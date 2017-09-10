@@ -1,0 +1,16 @@
+{
+  "cardName": "Arachas_Behemoth",
+  "attributes": [
+    "Insectoid"
+  ],
+  "infomation": "Whenever an Ally Consumes a card, Spawn an Arachas Hatchling on a random row and Damage self by 1 (ignoring Armor). Deploy: Gain 2 Armor.",
+  "initialStrength": 6,
+  "currentStrength": 6,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Siege",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

@@ -6,25 +6,27 @@
 #include <QEventLoop>
 #include <QStringList>
 #include <QDebug>
+#include "GameConstant.h"
 
-void ConsoleIOBuffer::getUserInput(QString &command, int &row, int &column) {
+void ConsoleIOBuffer::getUserInput(Command &command, int &row, int &column) {
     QEventLoop loop;
     connect(button, &QPushButton::clicked, &loop, &QEventLoop::quit);
     loop.exec();
     QStringList stringList = edit->text().split(QRegExp(" "));
-    command = stringList[0];
-    if (command[0].toLatin1() == 'l') {
-        command = "leftclick";
+    edit->clear();
+    QString stringCommand = stringList[0];
+    if (stringCommand[0].toLatin1() == 'l') {
+        command = Command::LeftClick;
         row = stringList[1].toInt();
         column = stringList[2].toInt();
-    } else if (command[0].toLatin1() == 'r') {
-        command = "rightclick";
-    } else if (command[0].toLatin1() == 'p') {
-        command = "pass";
-    } else if (command[0].toLatin1() == 'e') {
-        command = "escape";
-    } else if (command[0].toLatin1() == 's') {
-        command = "savedeck";
+    } else if (stringCommand[0].toLatin1() == 'r') {
+        command = Command::RightClick;
+    } else if (stringCommand[0].toLatin1() == 'p') {
+        command = Command::Pass;
+    } else if (stringCommand[0].toLatin1() == 'e') {
+        command = Command::Escape;
+    } else if (stringCommand[0].toLatin1() == 's') {
+        command = Command::SaveDeck;
     } else {
         qWarning() << "unhandled user input!";
     }

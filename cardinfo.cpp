@@ -220,3 +220,13 @@ CardInfo *CardInfo::createByName(const QString &name) {
     return info;
 }
 
+bool CardInfo::hasAttribute(const QString &name) {
+    return attributes.contains(name);
+}
+
+void CardInfo::resetAttributes() {
+    currentStrength = initialStrength;//reset the current strength, fot revive to life
+    armor = 0;//reset the armor
+    shield = false;
+}
+

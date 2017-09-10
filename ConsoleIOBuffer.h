@@ -15,7 +15,7 @@ Q_OBJECT
 public:
     ConsoleIOBuffer(QPushButton *button, QLineEdit *edit) : button(button), edit(edit) {}
 
-    void getUserInput(QString &command, int &row, int &column) override;
+    void getUserInput(Command &command, int &row, int &column) override;
 
 private:
     QPushButton *button;

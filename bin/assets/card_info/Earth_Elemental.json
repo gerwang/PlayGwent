@@ -1,0 +1,16 @@
+{
+  "cardName": "Earth_Elemental",
+  "attributes": [
+    "Construct"
+  ],
+  "infomation": "Deploy: Give this Unit a Shield. Deathwish: Spawn 2 Lesser Earth Elementals at the end of the row.",
+  "initialStrength": 6,
+  "currentStrength": 6,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Melee",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

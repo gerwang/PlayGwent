@@ -7,10 +7,11 @@
 
 
 #include <QtCore/QObject>
+#include "GameConstant.h"
 
 class AbstractIOBuffer {
 public:
-    virtual void getUserInput(QString &command, int &row, int &column)=0;
+    virtual void getUserInput(Command &command, int &row, int &column)=0;
 };
 
 

@@ -13,6 +13,7 @@
 
 class GameAssets : public QObject {//store all the info's that are on the game logic
 Q_OBJECT
+
 public:
     bool isGameEnd();
     //if the game ends
@@ -89,10 +90,6 @@ public:
 
     static int getHandIndex(int player);
 
-    static int getCandidateIndex(int player);
-
-    static int getSeletedIndex(int player);
-
     void getCardPosition(CardInfo *card, int &row, int &column);
 
     void moveCardPosToPos(int fromR, int fromC, int toR, int toC);
@@ -105,14 +102,36 @@ public:
 
     void addCurrentRound();
 
-    void clearWeatherOnAllRows();
-
     void clearAllGameRows();
 
     void loadPlayerDeck(const QList<QString> &zeroNameList,
                         const QList<QString> &oneNameList);
 
     void createCardsRandomlyOnNameListToRow(QList<QString> namelist, int row);
+
+    static int getEnemySameRowNumber(int rowNumber);
+
+    static int getPlayerMelee(int player);
+
+    static int getPlayerRanged(int player);
+
+    static int getPlayerSiege(int player);
+
+    static int whosePlayerRow(int row);
+
+    void updateRowStrongest(int row, QList<CardInfo *> &result, CardInfo *exclude);
+
+    void updateRowWeakest(int row, QList<CardInfo *> &result, CardInfo *exclude);
+
+    void removeCardFromGame(int row, int column);
+
+    bool cardAlreadyInGraveyard(CardInfo *card);
+
+    int playerBattlefieldBegin(int player);
+
+    int playerBattlefieldEnd(int player);
+
+    bool isCardOnBattlefield(CardInfo *card);
 
 private:
     //some psedu-local variable for game looping

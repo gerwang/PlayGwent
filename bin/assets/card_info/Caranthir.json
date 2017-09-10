@@ -1,0 +1,17 @@
+{
+  "cardName": "Caranthir",
+  "attributes": [
+    "Wild Hunt",
+    "Mage"
+  ],
+  "infomation": "Deploy: Move an Enemy to this Unit’s row on its side and apply Frost to that row.",
+  "initialStrength": 8,
+  "currentStrength": 8,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Gold",
+  "CD": -1,
+  "shield": false
+}

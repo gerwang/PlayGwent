@@ -1,0 +1,16 @@
+{
+  "cardName": "Wild_Hunt_Rider",
+  "attributes": [
+    "Wild Hunt"
+  ],
+  "infomation": "Increase by 1 the Damage dealt by Frost on the opposite row.",
+  "initialStrength": 8,
+  "currentStrength": 8,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

@@ -1,0 +1,18 @@
+{
+  "cardName": "Frightener",
+  "attributes": [
+    "Construct",
+    "Agent",
+    "Doomed"
+  ],
+  "infomation": "Deploy: Move a Unit on another row on this side to this row. Draw the top card from your Deck.",
+  "initialStrength": 12,
+  "currentStrength": 12,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Disloyal",
+  "row": "Event",
+  "type": "Silver",
+  "CD": -1,
+  "shield": false
+}

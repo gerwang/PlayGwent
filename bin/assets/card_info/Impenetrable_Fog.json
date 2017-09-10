@@ -1,0 +1,17 @@
+{
+  "cardName": "Impenetrable_Fog",
+  "attributes": [
+    "Special",
+    "Weather"
+  ],
+  "infomation": "Apply Fog to a row on your opponent's side. Fog: Every turn, at the start of your turn, Damage the Highest Unit on the row by 2.",
+  "initialStrength": 0,
+  "currentStrength": 0,
+  "armor": 0,
+  "faction": "Neutral",
+  "loyalty": "Disloyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

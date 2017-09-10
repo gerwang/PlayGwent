@@ -95,6 +95,10 @@ public:
 
     void setCD(int CD);
 
+    bool hasAttribute(const QString &name);
+
+    void resetAttributes();
+
 private:
     QList<QString> attributes;
     QString infomation;

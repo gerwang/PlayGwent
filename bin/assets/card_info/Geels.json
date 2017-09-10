@@ -1,0 +1,16 @@
+{
+  "cardName": "Geels",
+  "attributes": [
+    "Wild Hunt"
+  ],
+  "infomation": "Deploy: Draw the top Gold card and top Silver card from your Deck. Play one and return the other to the top of your Deck.",
+  "initialStrength": 1,
+  "currentStrength": 1,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Gold",
+  "CD": -1,
+  "shield": false
+}

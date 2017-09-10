@@ -1,0 +1,17 @@
+{
+  "cardName": "Lacerate",
+  "attributes": [
+    "Special",
+    "Organic"
+  ],
+  "infomation": "Damage all Units on a row by 3.",
+  "initialStrength": 0,
+  "currentStrength": 0,
+  "armor": 0,
+  "faction": "Neutral",
+  "loyalty": "Disloyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

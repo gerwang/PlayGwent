@@ -1,0 +1,17 @@
+{
+  "cardName": "Thunderbolt_Potion",
+  "attributes": [
+    "Special",
+    "Alchemy"
+  ],
+  "infomation": "Add 2 Armor to 3 adjacent Units and Boost them by 3.",
+  "initialStrength": 0,
+  "currentStrength": 0,
+  "armor": 0,
+  "faction": "Neutral",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

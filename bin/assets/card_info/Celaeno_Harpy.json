@@ -1,0 +1,16 @@
+{
+  "cardName": "Celaeno_Harpy",
+  "attributes": [
+    "Beast"
+  ],
+  "infomation": "Deploy: Spawn 2 Harpy Eggs to the left of this Unit.",
+  "initialStrength": 5,
+  "currentStrength": 5,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}
