@@ -1,0 +1,17 @@
+{
+  "cardName": "Biting_Frost",
+  "attributes": [
+    "Special",
+    "Weather"
+  ],
+  "infomation": "Apply Frost to a row on your opponent's side. Frost: Every turn, at the start of your turn, Damage the Lowest Unit on the row by 2.",
+  "initialStrength": 0,
+  "currentStrength": 0,
+  "armor": 0,
+  "faction": "Neutral",
+  "loyalty": "Disloyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}

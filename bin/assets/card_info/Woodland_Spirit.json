@@ -1,0 +1,16 @@
+{
+  "cardName": "Woodland_Spirit",
+  "attributes": [
+    "Relict"
+  ],
+  "infomation": "Deploy: Spawn 3 Rabid Wolves and apply Fog to the opposite row.",
+  "initialStrength": 5,
+  "currentStrength": 5,
+  "armor": 0,
+  "faction": "Monsters",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Gold",
+  "CD": -1,
+  "shield": false
+}

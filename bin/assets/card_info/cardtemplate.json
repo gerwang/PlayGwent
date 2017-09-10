@@ -1,0 +1,14 @@
+{
+	"cardName":"",
+	"attributes":[""],
+	"infomation":"",
+	"initialStrength":0,
+	"currentStrength":0,
+	"armor":0,
+	"faction":"",
+	"loyalty":"",
+	"row":"",
+	"type":"",
+	"CD":-1,
+	"shield":false
+}

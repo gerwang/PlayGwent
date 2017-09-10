@@ -1,0 +1,14 @@
+{
+	"cardName":"Geralt_Igni",
+	"type":"Gold",
+	"attributes":["Witcher"],
+	"infomation":"Deploy: Destroy all the Highest Units on the opposite row if that row totals 25 or more Power.",
+	"initialStrength":5,
+	"currentStrength":5,
+	"armor":0,
+	"faction":"Neutral",
+	"loyalty":"Loyal",
+	"row":"Event",
+	"CD":-1,
+	"shield":false
+}

@@ -1,0 +1,14 @@
+{
+	"cardName":"First_Light",
+	"attributes":["Special"],
+	"infomation":"Spawn Clear Skies or Rally.",
+	"initialStrength":0,
+	"currentStrength":0,
+	"armor":0,
+	"faction":"Neutral",
+	"loyalty":"Loyal",
+	"row":"Event",
+	"type":"Bronze",
+	"CD":-1,
+	"shield":false
+}

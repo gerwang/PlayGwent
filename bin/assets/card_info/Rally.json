@@ -1,0 +1,17 @@
+{
+  "cardName": "Rally",
+  "attributes": [
+    "Tactic",
+    "Doomed"
+  ],
+  "infomation": "Play a random Bronze Unit from your Deck.",
+  "initialStrength": 0,
+  "currentStrength": 0,
+  "armor": 0,
+  "faction": "Neutral",
+  "loyalty": "Loyal",
+  "row": "Event",
+  "type": "Bronze",
+  "CD": -1,
+  "shield": false
+}
