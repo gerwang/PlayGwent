@@ -27,6 +27,10 @@ void ConsoleIOBuffer::getUserInput(Command &command, int &row, int &column) {
         command = Command::Escape;
     } else if (stringCommand[0].toLatin1() == 's') {
         command = Command::SaveDeck;
+    } else if (stringCommand[0].toLatin1() == 'i') {
+        command = Command::ClipboardImport;
+    } else if (stringCommand[0].toLatin1() == 'o') {
+        command = Command::ClipboardExport;
     } else {
         qWarning() << "unhandled user input!";
     }

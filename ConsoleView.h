@@ -111,6 +111,10 @@ public:
 
     void spawnNewCard(CardInfo *card, int row, int column) override;
 
+    void setLineEditText(const QString &text) override;
+
+    QString getLineEditText() override;
+
 private:
     InputState playerInputState[2]{};// for each player
     ConsoleWindow *mainwindow{};
@@ -123,6 +127,7 @@ private:
     Scene currentScene;
 
     QList<CardInfo *> cardslots[ROW_NUM];
+    CardInfo *leader;
     Weather rowWeather[ROW_NUM]{};
 
     QList<bool> posBoolValid[ROW_NUM];

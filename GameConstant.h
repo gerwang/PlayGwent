@@ -44,6 +44,8 @@ const QString InputStateMSG[3] = {
 
 const int NumberToRedraw[3] = {3, 1, 1};
 const int NumberToChoose[3] = {10, 2, 1};
+const int MaxDeckCount[3] = {40, 6, 4};
+const int MaxSameTypeCount[3] = {3, 1, 1};
 
 enum CardArrayEnum {
     Player1_Graveyard = 0,
@@ -76,7 +78,9 @@ enum CardArrayEnum {
 enum PushButtonEnum {
     ESCAPE,
     BUTTON_PASS,
-    SAVEDECK
+    SAVEDECK,
+    CLIPBOARD_IMPORT,
+    CLIPBOARD_EXPORT
 };
 
 enum TextLabelEnum {
@@ -84,15 +88,17 @@ enum TextLabelEnum {
             Player_CardChooser_Title = 12,
     Player1_Name = 13,
     Player0_Name = 14,
-    Label_ALL_DeckBuilder = 15,
-    Label_Gold_DeckBuilder = 16,
-    Label_Silver_DeckBuilder = 17,
-    Label_Bronze_DeckBuilder = 18
+    Label_Bronze_DeckBuilder = 15,
+    Label_Silver_DeckBuilder = 16,
+    Label_Gold_DeckBuilder = 17,
+    Label_ALL_DeckBuilder = 18,
+    Player1_CombatValue = 19,
+    Player0_CombatValue = 20
 };
 
 const int RoundEndDuration = 3000, GameEndDuration = 6000;//the duration of messagebox presented in msec
 
-const int BUTTON_NUM = 3, LABEL_NUM = 19;
+const int BUTTON_NUM = 5, LABEL_NUM = 21;
 
 enum Weather {
     Sunny = 0, Rainy = 1, Foggy = 2, Frozen = 3
@@ -103,8 +109,49 @@ const QString WeatherMSG[4] = {
 };
 //TODO there should be a lineedit to edit the deck name
 
-enum class Command {
-    LeftClick, RightClick, Pass, Escape, SaveDeck
+enum Command {
+    LeftClick, RightClick, Pass, Escape, SaveDeck, ClipboardImport, ClipboardExport
+};
+
+const QString PushButtonText[BUTTON_NUM] = {
+        "escape",
+        "pass",
+        "save deck and exit",
+        "import from clipboard",
+        "export to clipboard"
+};
+
+const QList<QString> CardNameList = {//all cards can appear in DECK
+        "Geralt_Igni",
+        "Arachas",
+        "Roach",
+        "Vran_Warrior",
+        "Arachas_Behemoth",
+        "Thunderbolt_Potion",
+        "Commanders_Horn",
+        "Lacerate",
+        "Celaeno_Harpy",
+        "Earth_Elemental",
+        "Crone_Brewess",
+        "Crone_Weavess",
+        "Crone_Whispess",
+        "Frightener",
+        "Geels",
+        "Bekkers_Twisted_Mirror",
+        "Biting_Frost",
+        "Impenetrable_Fog",
+        "Torrential_Rain",
+        "First_Light",
+        "Foglet",
+        "Woodland_Spirit",
+        "Archgriffin",
+        "Wild_Hunt_Rider",
+        "Caranthir"
+};
+
+const QList<QString> LeaderNameList = {
+        "Unseen_Elder",
+        "Dagon"
 };
 
 #endif //PLAYGWENT_GAMECONSTANT_H_H

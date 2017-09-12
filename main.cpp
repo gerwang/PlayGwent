@@ -3,9 +3,12 @@
 #include "ConsoleView.h"
 #include "GameController.h"
 #include "ConsoleView.h"
+#include "logindialog.h"
+#include "roomdialog.h"
 
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
+    /*
 //    ConsoleWindow w;
 //    w.show();
     QList<QString> completed;
@@ -41,8 +44,6 @@ int main(int argc, char *argv[]) {
             << "Wild_Hunt_Rider"
             << "Caranthir";
 
-    GameController::controller()->setAssets(new GameAssets);
-    GameController::controller()->setGameUI(new ConsoleView);
     QList<QString> zeroNames, oneNames;
     for (int i = 0; i < 15; i++) {
         zeroNames << completed[qrand() % completed.size()];
@@ -50,9 +51,18 @@ int main(int argc, char *argv[]) {
     }
     GameController::controller()->getAssets()->setRandomSeed(234);
     GameController::controller()->getAssets()->loadPlayerDeck(zeroNames, oneNames);
-    GameController::controller()->getAssets()->setPlayerName(0, QString("Player0"));
-    GameController::controller()->getAssets()->setPlayerName(1, QString("Player1"));
+    GameController::controller()->setPlayerName(0, QString("Player0"));
+    GameController::controller()->setPlayerName(1, QString("Player1"));
     GameController::controller()->getGameUI()->setLocalPlayer(0);
     GameController::controller()->startGame();
+     */
+//    GameController::controller()->setAssets(new GameAssets);
+//    GameController::controller()->setGameUI(new ConsoleView);
+//    GameController::controller()->startDeckBuilder();
+//    LoginDialog dialog;
+//    qDebug() << dialog.exec();
+    RoomDialog dialog;
+    dialog.exec();
+    qDebug() << dialog.getSelectedGame() << dialog.getSelectedPlayer();
     return a.exec();
 }

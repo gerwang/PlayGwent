@@ -30,6 +30,12 @@ public:
 
     void startGame();
 
+    void startDeckBuilder();
+
+    void startMainMenu();
+
+    void setPlayerName(int player, const QString &name);
+
 private:
     static GameController *mainController;
 
@@ -61,6 +67,32 @@ private:
     void setPlayerPassAndJudgeRoundEnd(int currentPlayer);
 
     void clearWeatherOnAllBattlefield();
+
+    void cleanUpRow(int row);
+
+    void cleanUpGame();
+
+    void updateLabel();
+
+    void deckBuilderInit();
+
+    void deckBuilderCleanUp();
+
+    void prepareChooseDecks();
+
+    void performSpawnCardToPos(CardInfo *card, int row, int column);
+
+    void initializeDeckCards();
+
+    bool performMoveAccordingToDeck(Deck &deck);
+
+    void performMoveToNeighbor(int targetRow, CardInfo *card);
+
+    Deck currentStateToDeck();
+
+    void prepareMainMenu();
+
+    void cleanUpMainMenu();
 
 protected:
     GameController() = default;

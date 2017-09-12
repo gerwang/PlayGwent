@@ -4,6 +4,7 @@
 
 #include "GameAssets.h"
 #include <QDebug>
+#include <QtCore/QJsonArray>
 
 bool GameAssets::getPlayerPass(int player) {
     return playerPass[player];
@@ -337,7 +338,165 @@ void GameAssets::updateRowWeakest(int row, QList<CardInfo *> &result, CardInfo *
     }
 }
 
+void GameAssets::setDeckTypeCount(int type, int cnt) {
+    deckTypeCount[type] = cnt;
+}
 
+int GameAssets::getDeckTypeCount(int type) {
+    return deckTypeCount[type];
+}
 
+void GameAssets::updateDeckTypeCount() {
+    memset(deckTypeCount, 0, sizeof(deckTypeCount));
+    for (int row = DeckBuilder_NoHP; row <= DeckBuilder_Melee_Event; row++) {
+        for (auto card:cardarray[row]) {
+            deckTypeCount[card->getType()]++;//remeber the is not leader card in deck
+        }
+    }
+    deckTotalCount = 0;
+    for (int type = CardInfo::Bronze; type < CardInfo::Gold; type++) {
+        deckTotalCount += deckTypeCount[type];
+    }
+}
+
+int GameAssets::getDeckTotalCount() const {
+    return deckTotalCount;
+}
+
+void GameAssets::setDeckTotalCount(int deckTotalCount) {
+    GameAssets::deckTotalCount = deckTotalCount;
+}
+
+void GameAssets::fromJson(const QJsonObject &json) {
+    roundStart = json["roundStart"].toBool();
+    previousWinner = json["previousWinner"].toInt();
+    currentPlayer = json["currentPlayer"].toInt();
+    currentRound = json["currentRound"].toInt();
+    handled = json["handled"].toBool();
+    QJsonArray jsonCardArrays = json["cardarray"].toArray();
+    for (int row = 0; row < jsonCardArrays.size(); row++) {
+        cardarray[row].clear();
+        QJsonArray jsonArray = jsonCardArrays.at(row).toArray();
+        for (int column = 0; column < jsonCardArrays.size(); column++) {
+            auto info = new CardInfo;
+            info->readFromJson(jsonCardArrays.at(column).toObject());
+            cardarray[row].append(info);
+        }
+    }
+    QJsonArray jsonWeatherArray = json["rowWeather"].toArray();
+    for (int row = 0; row < jsonWeatherArray.size(); row++) {
+        rowWeather[row] = static_cast<Weather>(jsonWeatherArray.at(row).toInt());
+        //TODO check if it is okay
+    }
+    QJsonArray jsonPlayerWinRound = json["playerWinRound"].toArray();
+    QJsonArray jsonPlayerPass = json["playerPass"].toArray();
+    QJsonArray jsonPlayerName = json["playerName"].toArray();
+    QJsonArray jsonPlayerScore = json["playerScore"].toArray();
+    for (int player = 0; player < 2; player++) {
+        playerWinRound[player] = jsonPlayerWinRound.at(player).toInt();
+        playerPass[player] = jsonPlayerPass.at(player).toBool();
+        playerName[player] = jsonPlayerName.at(player).toString();
+        QJsonArray jsonScoreArray = jsonPlayerScore.at(player).toArray();
+        for (int rnd = 0; rnd < jsonScoreArray.size(); rnd++) {
+            playerScore[player][rnd] = jsonScoreArray.at(rnd).toInt();
+        }
+    }
+    randomSeed = static_cast<unsigned int>(json["randomSeed"].toInt());
+}
+
+void GameAssets::toJson(QJsonObject &json) {
+
+    json.insert("roundStart", roundStart);
+    json.insert("previosWinner", previousWinner);
+    json.insert("currentPlayer", currentPlayer);
+    json.insert("currentRound", currentRound);
+    json.insert("handled", handled);
+
+    QJsonArray jsonCardArrays;
+    for (int row = 0; row <= Player_Seleted; row++) {
+        QJsonArray jsonArray;
+        for (auto info:cardarray[row]) {
+            QJsonObject infoObject;
+            info->writeToJson(infoObject);
+            jsonArray.append(infoObject);
+        }
+        jsonCardArrays.append(jsonArray);
+    }
+    json.insert("cardarray", jsonCardArrays);
+
+    QJsonArray jsonWeatherArray;
+    for (int row = 0; row <= Player0_Siege; row++) {
+        jsonWeatherArray.append(static_cast<int>(rowWeather[row]));
+        //TODO check if it is okay
+    }
+    json.insert("rowWeather", jsonWeatherArray);
+
+    QJsonArray jsonPlayerWinRound;
+    QJsonArray jsonPlayerPass;
+    QJsonArray jsonPlayerName;
+    QJsonArray jsonPlayerScore;
+    for (int player = 0; player < 2; player++) {
+        jsonPlayerWinRound.append(playerWinRound[player]);
+        jsonPlayerPass.append(playerPass[player]);
+        jsonPlayerName.append(playerName[player]);
+        QJsonArray jsonScoreArray;
+        for (int rnd = 0; rnd < jsonScoreArray.size(); rnd++) {
+            jsonScoreArray.append(playerScore[player][rnd]);
+        }
+        jsonPlayerScore.append(jsonScoreArray);
+    }
+    json.insert("playerWinRound", jsonPlayerWinRound);
+    json.insert("playerPass", jsonPlayerPass);
+    json.insert("playerName", jsonPlayerName);
+    json.insert("playerScore", jsonPlayerScore);
+
+    json.insert("randomSeed", static_cast<int>(randomSeed));
+}
+
+bool GameAssets::isDeckValidMove(CardInfo::Type cardType) {
+    return deckTypeCount[cardType] + 1 <= MaxDeckCount[cardType] &&
+           deckTotalCount + 1 <= 40;
+}
+
+bool GameAssets::isDeckValidSave() {
+    return 25 <= deckTotalCount && deckTotalCount <= 40;
+}
+
+QList<Deck> &GameAssets::getDecks() {
+    return decks;
+}
+
+void GameAssets::setDecks(const QList<Deck> &decks) {
+    GameAssets::decks = decks;
+}
+
+const QString &GameAssets::getLeaderName() const {
+    return leaderName;
+}
+
+void GameAssets::setLeaderName(const QString &leaderName) {
+    GameAssets::leaderName = leaderName;
+}
+
+int GameAssets::getCardIndexByName(int row, const QString &name) {
+    for (int column = 0; column < cardarray[row].size(); column++) {
+        if (cardarray[row][column]->getCardName() == name) {
+            return column;
+        }
+    }
+    return -1;
+}
+
+int GameAssets::getDeckBuilderTargetRow(CardInfo *card) {
+    if (card->getInitialStrength() == 0) {//this should be the first
+        return DeckBuilder_NoHP;
+    } else if (card->getRow() == CardInfo::Ranged) {
+        return DeckBuilder_Ranged;
+    } else if (card->getRow() == CardInfo::Siege) {
+        return DeckBuilder_Siege;
+    } else {
+        return DeckBuilder_Melee_Event;
+    }
+}
 
 //you should always perform MOVE instead of REMOVE, case REMOVE is a really serios thing

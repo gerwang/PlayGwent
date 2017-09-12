@@ -9,6 +9,7 @@
 #include <QtCore/QObject>
 #include "cardinfo.h"
 #include "GameConstant.h"
+#include "Deck.h"
 #include <algorithm>
 
 class GameAssets : public QObject {//store all the info's that are on the game logic
@@ -109,6 +110,8 @@ public:
 
     void createCardsRandomlyOnNameListToRow(QList<QString> namelist, int row);
 
+    int getCardIndexByName(int row, const QString &name);
+
     static int getEnemySameRowNumber(int rowNumber);
 
     static int getPlayerMelee(int player);
@@ -133,6 +136,34 @@ public:
 
     bool isCardOnBattlefield(CardInfo *card);
 
+    void setDeckTypeCount(int type, int cnt);
+
+    int getDeckTypeCount(int type);
+
+    void updateDeckTypeCount();
+
+    int getDeckTotalCount() const;
+
+    void setDeckTotalCount(int deckTotalCount);
+
+    void fromJson(const QJsonObject &json);
+
+    void toJson(QJsonObject &json);
+
+    bool isDeckValidMove(CardInfo::Type cardType);
+
+    bool isDeckValidSave();
+
+    QList<Deck> &getDecks();
+
+    void setDecks(const QList<Deck> &decks);
+
+    const QString &getLeaderName() const;
+
+    void setLeaderName(const QString &leaderName);
+
+    int getDeckBuilderTargetRow(CardInfo *card);
+
 private:
     //some psedu-local variable for game looping
     bool roundStart;
@@ -147,7 +178,11 @@ private:
     bool playerPass[2];
     QString playerName[2];
     int playerScore[2][3];
+    int deckTypeCount[3];
+    int deckTotalCount;
+    QList<Deck> decks;
     unsigned randomSeed;
+    QString leaderName;
 };
 
 

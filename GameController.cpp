@@ -4,6 +4,9 @@
 
 #include "GameController.h"
 #include "SubclassRegister.h"
+#include "Deck.h"
+#include <QGuiApplication>
+#include <QClipboard>
 
 void GameController::startGame() {//player use which deck is already choosen
     //for cut line relink, no local variable is permitted
@@ -42,6 +45,8 @@ void GameController::startGame() {//player use which deck is already choosen
     //CAUTION: compare win rounds when game end, not total score!
     gameUI->execMessageBox(title, message, GameEndDuration);
     //game end
+    cleanUpGame();
+    gameUI->switchToScene(AbstractUI::MainMenuScene);
 }
 
 bool GameController::gameLoop() {
@@ -157,6 +162,7 @@ void GameController::performMovePosToPos(int fromR, int fromC, int toR, int toC)
     //always move assets before ui because animation would block
     assets->moveCardPosToPos(fromR, fromC, toR, toC);
     gameUI->moveCard(fromR, fromC, toR, toC);
+    updateLabel();
 }
 
 void
@@ -166,19 +172,20 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
             &seleted = assets->getCardArray(seletedIndex),
             &supplement = assets->getCardArray(supplementIndex);
 
-    gameUI->setLabelText(Player_CardChooser_Title, title);//player0 14 player1 15 card chooser title
-    gameUI->setButtonEnabled(ESCAPE, allowEscape);
+    gameUI->setLabelText(Player_CardChooser_Title, title);
 
     int cardChoosed = 0;
     while (cardChoosed < chooseNum) {
 
         Command command;
         int row, column;
+        gameUI->setButtonEnabled(ESCAPE, allowEscape);
         gameUI->setWholeRowValidPositions(candidateIndex);
         gameUI->setPlayerInputState(player, AbstractUI::MustValidTarget);
         gameUI->getUserInput(command, row, column, player);
         gameUI->setPlayerInputState(player, AbstractUI::RejectAll);
         gameUI->resetValidPositions();
+        gameUI->setButtonEnabled(ESCAPE, false);
 
         if (command == Command::LeftClick) {//must be a valid input (filtered by UI)
             if (row != candidateIndex) {
@@ -208,6 +215,9 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
             break;
         }
     }
+
+
+    gameUI->setLabelText(Player_CardChooser_Title, "");//clean up
 }
 
 void GameController::handleRedrawCard() {//handle two players' redraw card
@@ -288,7 +298,7 @@ void GameController::setPlayerPassAndJudgeRoundEnd(int currentPlayer) {
 
         QString message = tr("Round") + QString::number(currentRound + 1);
 
-        int localPlayer = gameUI->getLocalPlayer();
+        int localPlayer = gameUI->getLocalPlayer();//TODO : modify it to use player0 and player1
         if (combatValue[localPlayer] < combatValue[localPlayer ^ 1]) {
             message += tr(" Lose!");
             assets->addPlayerWinRound(localPlayer ^ 1);
@@ -435,6 +445,7 @@ void GameController::removeCardFromGame(CardInfo *card) {
     assets->getCardPosition(card, row, column);
     gameUI->removeCardFromGame(row, column);//must perform before
     assets->removeCardFromGame(row, column);
+    updateLabel();
 }
 
 void GameController::Consume(CardInfo *consumer, CardInfo *food) {
@@ -449,6 +460,7 @@ void GameController::Consume(CardInfo *consumer, CardInfo *food) {
     assets->getCardPosition(consumer, fromR, fromC);
     assets->getCardPosition(food, toR, toC);
     gameUI->showConsume(fromR, fromC, toR, toC);
+    updateLabel();
     emit afterConsume(consumer, food);
 }
 
@@ -486,6 +498,7 @@ void GameController::boostFromSrcToDests(CardInfo *src, const QList<CardInfo *> 
         destPoints.append(QPoint(row, column));
     }
     gameUI->showBoost(srcPoint, destPoints);
+    updateLabel();
 }
 
 void GameController::damageFromSrcToDests(CardInfo *src, const QList<CardInfo *> &dests, int damage, bool armorUseful) {
@@ -518,6 +531,7 @@ void GameController::damageFromSrcToDests(CardInfo *src, const QList<CardInfo *>
         destPoints.append(QPoint(row, column));
     }
     gameUI->showDamage(srcPoint, destPoints);
+    updateLabel();
 
     for (auto dest:dests) {//check if someone should be destroyed
         if (dest->getCurrentStrength() == 0) {
@@ -531,6 +545,7 @@ GameController::spawnCardToPosByPlayer(CardInfo *card, int row, int column,//the
                                        int player) {//the player who triggered this operation
     assets->getCardArray(row).insert(column, card);
     gameUI->spawnNewCard(card, row, column);
+    updateLabel();
     if (assets->isBattleField(row)) {
         controllerHandleDeploy(card, assets->getDeckIndex(player), row);//trigger deploy
     }
@@ -592,6 +607,270 @@ void GameController::DestroySpecialCard(CardInfo *specialCard, int fromR) {
             removeCardFromGame(specialCard);
         }
     }
+}
+
+void GameController::cleanUpRow(int row) {
+    const QList<CardInfo *> &array = assets->getCardArray(row);
+    while (!array.empty()) {
+        removeCardFromGame(array.first());
+    }
+}
+
+void GameController::cleanUpGame() {
+    clearWeatherOnAllBattlefield();
+    for (int row = Player1_Graveyard; row <= Player0_Graveyard; row++) {
+        cleanUpRow(row);
+    }
+}
+
+void GameController::updateLabel() {
+    for (int row = Player1_Graveyard; row <= Player1_Hand; row++) {
+        gameUI->setLabelText(row, QString::number(assets->getCardArray(row).size()));
+    }
+    for (int row = Player1_Siege; row <= Player0_Siege; row++) {//battlefield
+        gameUI->setLabelText(row, QString::number(assets->getRowCombatValueSum(row)));
+    }
+    for (int row = Player0_Hand; row <= Player0_Graveyard; row++) {
+        gameUI->setLabelText(row, QString::number(assets->getCardArray(row).size()));
+    }
+    assets->updateDeckTypeCount();
+    gameUI->setLabelText(Label_Bronze_DeckBuilder, QString::number(assets->getDeckTypeCount(CardInfo::Bronze)));
+    gameUI->setLabelText(Label_Silver_DeckBuilder, QString::number(assets->getDeckTypeCount(CardInfo::Silver)));
+    gameUI->setLabelText(Label_Gold_DeckBuilder, QString::number(assets->getDeckTypeCount(CardInfo::Gold)));
+    gameUI->setLabelText(Label_ALL_DeckBuilder, QString::number(assets->getDeckTotalCount()));
+    gameUI->setLabelText(Player0_CombatValue, QString::number(assets->getPlayerCombatValueSum(0)));
+    gameUI->setLabelText(Player1_CombatValue, QString::number(assets->getPlayerCombatValueSum(1)));
+}
+
+void GameController::setPlayerName(int player, const QString &name) {
+    assets->setPlayerName(player, name);
+    if (player == 0) {
+        gameUI->setLabelText(Player0_Name, name);
+    } else if (player == 1) {
+        gameUI->setLabelText(Player1_Name, name);
+    }
+}
+
+void GameController::startDeckBuilder() {
+    deckBuilderInit();
+    for (int row = DeckBuilder_Candidate; row <= DeckBuilder_Melee_Event; row++) {
+        gameUI->setWholeRowValidPositions(row);
+    }
+    gameUI->setButtonEnabled(CLIPBOARD_IMPORT, true);
+    gameUI->setButtonEnabled(CLIPBOARD_EXPORT, true);
+    gameUI->setButtonEnabled(SAVEDECK, true);
+    gameUI->setPlayerInputState(0, AbstractUI::MustValidTarget);
+    while (true) {
+        Command command;
+        int row, column;
+        gameUI->getUserInput(command, row, column, 0);
+        if (command == Command::LeftClick) {
+            CardInfo *seletedCard = assets->getCardArray(row).at(column);
+            if (row == DeckBuilder_Candidate) {
+                if (assets->isDeckValidMove(seletedCard->getType())) {
+                    int targetRow = assets->getDeckBuilderTargetRow(seletedCard);
+                    performMoveToNeighbor(targetRow, seletedCard);
+                } else {
+                    gameUI->execMessageBox(tr("invalid move"), tr("do not meet the card standard"),
+                                           RoundEndDuration);//TODO toggle the value
+                }
+            } else {
+                performMoveToNeighbor(DeckBuilder_Candidate, seletedCard);
+            }
+        } else if (command == Command::ClipboardExport) {
+            Deck currentDeck = currentStateToDeck();
+            QClipboard *clipboard = QGuiApplication::clipboard();
+            clipboard->setText(currentDeck.toJsonStr());
+        } else if (command == Command::ClipboardImport) {
+            Deck outerDeck;
+            QClipboard *clipboard = QGuiApplication::clipboard();
+            int error = outerDeck.parseDeckFromString(clipboard->text());
+            if (error == 0) {
+                performMoveAccordingToDeck(outerDeck);
+            } else if (error == 1) {
+                gameUI->execMessageBox(tr("syntax error"), tr("cannot parse clipboard"),
+                                       RoundEndDuration);//TODO toggle the duration
+            } else if (error == 2) {
+                gameUI->execMessageBox(tr("invalid deck"), tr("too many same cards"),
+                                       RoundEndDuration);//TODO toggle the duration
+            }
+        } else if (command == Command::SaveDeck) {
+            if (!assets->isDeckValidSave()) {
+                gameUI->execMessageBox(tr("cannot save deck"), tr("card numbers do not meet the requirement"),
+                                       RoundEndDuration);//TODO toggle
+            } else {
+                QFile file("assets/card_decks/" + gameUI->getLineEditText() + ".json");
+                if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                    gameUI->execMessageBox(tr("cannot save deck"), tr("open file failed!"),
+                                           RoundEndDuration);//TODO toggle
+                } else {
+                    Deck currentDeck = currentStateToDeck();
+                    file.write(currentDeck.toJsonStr());
+                    file.close();
+                    break;//successful, return to mainmenu
+                }
+            }
+        }
+    }
+    gameUI->setPlayerInputState(0, AbstractUI::RejectAll);
+    gameUI->setButtonEnabled(SAVEDECK, false);
+    gameUI->setButtonEnabled(CLIPBOARD_IMPORT, false);
+    gameUI->setButtonEnabled(CLIPBOARD_EXPORT, false);
+    gameUI->resetValidPositions();
+    deckBuilderCleanUp();
+}
+
+void GameController::deckBuilderInit() {
+    gameUI->switchToScene(AbstractUI::PlayerChooserScene);
+    //leader choose scene
+    prepareChooseDecks();
+
+    performChooseCard(Player_Candidate, Player_Seleted, Player_Seleted, 1, 0, false, false, false,
+                      tr("Please choose a deck to edit"));
+    QString seletedName = assets->getCardArray(Player_Seleted).first()->getCardName();
+
+    cleanUpRow(Player_Candidate);
+    cleanUpRow(Player_Seleted);
+
+    Deck nowDeck{};
+
+    if (seletedName == "New_Deck") {
+        for (const auto &leaderName:LeaderNameList) {
+            performSpawnCardToPos(CardInfo::createByName(leaderName), Player_Candidate,
+                                  assets->getCardArray(Player_Candidate).size());
+        }
+        performChooseCard(Player_Candidate, Player_Seleted, Player_Seleted, 1, 0, false, false, false,
+                          tr("Choose your leader"));
+        QString seletedLeader = assets->getCardArray(Player_Seleted).first()->getCardName();
+        cleanUpRow(Player_Candidate);
+        cleanUpRow(Player_Seleted);
+
+        nowDeck.setLeader(seletedLeader);
+        nowDeck.getCards().clear();
+    } else {
+        for (const auto &deck:assets->getDecks()) {
+            if (deck.getName() == seletedName) {
+                nowDeck = deck;
+                break;
+            }
+        }
+    }
+
+    assets->getDecks().clear();
+    initializeDeckCards();
+    performMoveAccordingToDeck(nowDeck);
+    gameUI->switchToScene(AbstractUI::DeckBuilderScene);
+}
+
+void GameController::deckBuilderCleanUp() {
+    for (int row = DeckBuilder_Candidate; row <= DeckBuilder_Melee_Event; row++) {
+        cleanUpRow(row);
+    }
+    assets->setLeaderName("");
+    gameUI->setLineEditText("");
+    gameUI->switchToScene(AbstractUI::MainMenuScene);
+}
+
+void GameController::prepareChooseDecks() {
+    QDir deckDir("assets/card_decks");
+    deckDir.setFilter(QDir::Files | QDir::NoSymLinks);
+    QFileInfoList fileInfoList = deckDir.entryInfoList();
+    assets->getDecks().clear();
+    for (const auto &fileInfo:fileInfoList) {
+        if (QString::compare(fileInfo.suffix(), "json", Qt::CaseInsensitive) == 0) {
+            QFile file;
+            file.setFileName(fileInfo.absoluteFilePath());
+            file.open(QIODevice::ReadOnly | QIODevice::Text);
+            QString jsonStr = file.readAll();
+            file.close();
+            Deck deck;
+            if (deck.parseDeckFromString(jsonStr) == 0) {//no error
+                assets->getDecks().append(deck);
+                CardInfo *card = CardInfo::createByName(deck.getLeader());
+                card->setCardName(deck.getName());
+                performSpawnCardToPos(card, Player_Candidate, assets->getCardArray(Player_Candidate).size());
+            }
+        }
+    }
+    CardInfo *newDeckCard = CardInfo::createByName("New_Deck");
+    performSpawnCardToPos(newDeckCard, Player_Candidate, assets->getCardArray(Player_Candidate).size());
+}
+
+void GameController::performSpawnCardToPos(CardInfo *card, int row, int column) {
+    assets->getCardArray(row).insert(column, card);
+    gameUI->spawnNewCard(card, row, column);
+    updateLabel();
+}
+
+void GameController::initializeDeckCards() {
+    for (const auto &card:CardNameList) {
+        CardInfo::Type type = Deck::getTypeByName(card);
+        for (int cnt = 0; cnt < MaxSameTypeCount[type]; cnt++) {
+            performSpawnCardToPos(CardInfo::createByName(card), DeckBuilder_Candidate,
+                                  assets->getCardArray(DeckBuilder_Candidate).size());
+        }
+    }
+}
+
+bool GameController::performMoveAccordingToDeck(Deck &deck) {
+    for (int row = DeckBuilder_NoHP; row <= DeckBuilder_Melee_Event; row++) {
+        performMoveAllCardsFromAToB(row, DeckBuilder_Candidate);
+    }
+    assets->setLeaderName(deck.getLeader());
+    gameUI->setLineEditText(deck.getName());
+    for (const auto &cardName:deck.getCards()) {
+        int index = assets->getCardIndexByName(DeckBuilder_Candidate, cardName);
+        if (index == -1) {
+            return false;
+        }
+        CardInfo *card = assets->getCardArray(DeckBuilder_Candidate).at(index);
+        if (!assets->isDeckValidMove(card->getType())) {
+            return false;
+        }
+        int targetRow = assets->getDeckBuilderTargetRow(card);
+        performMoveToNeighbor(targetRow, card);
+    }
+    return true;
+}
+
+void GameController::performMoveToNeighbor(int targetRow, CardInfo *card) {
+    int index = assets->getCardIndexByName(targetRow, card->getCardName());
+    if (index == -1) {
+        index = 0;
+    }
+    int row, column;
+    assets->getCardPosition(card, row, column);
+    performMovePosToPos(row, column, targetRow, index);
+}
+
+Deck GameController::currentStateToDeck() {
+    Deck result;
+    result.setLeader(assets->getLeaderName());
+    result.getCards().clear();
+    result.setName(gameUI->getLineEditText());
+    for (int row = DeckBuilder_NoHP; row <= DeckBuilder_Melee_Event; row++) {
+        for (auto card:assets->getCardArray(row)) {
+            result.getCards().append(card->getCardName());
+        }
+    }
+    return result;
+}
+
+void GameController::startMainMenu() {
+    gameUI->switchToScene(AbstractUI::MainMenuScene);
+    gameUI->setWholeRowValidPositions(Main_Menu);
+    gameUI->setPlayerInputState(0, AbstractUI::MustValidTarget);
+    //TODO
+    gameUI->setPlayerInputState(0, AbstractUI::RejectAll);
+    gameUI->resetValidPositions();
+}
+
+void GameController::prepareMainMenu() {
+    //TODO
+}
+
+void GameController::cleanUpMainMenu() {
+    //TODO
 }
 
 

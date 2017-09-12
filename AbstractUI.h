@@ -22,6 +22,10 @@ public:
         MainMenuScene, GameScene, DeckBuilderScene, PlayerChooserScene
     };
 
+    virtual void setLineEditText(const QString &text)=0;
+
+    virtual QString getLineEditText()=0;
+
     virtual void setSource(int row, int column)=0;
 
     virtual void releaseSource()=0;//when user click right mouse
@@ -107,7 +111,6 @@ public:
     virtual void showDamage(QPoint src, const QList<QPoint> &dests)=0;
 
     virtual void spawnNewCard(CardInfo *card, int row, int column)=0;
-
     //notify the logic that the interface has received a VALID user input,
     // but leave rightclick and stopfollow to be judged by logic                obselete
 };

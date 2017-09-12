@@ -33,6 +33,15 @@ class Ui_ConsoleUI {
 public:
     QWidget *centralWidget;
     QGridLayout *gridLayout;
+    QHBoxLayout *horizontalLayout_8;
+    QLabel *label_13;
+    QHBoxLayout *horizontalLayout_7;
+    QLabel *label_20;
+    QLabel *label_21;
+    QHBoxLayout *horizontalLayout_9;
+    QPushButton *pushButton_4;
+    QPushButton *pushButton_5;
+    QLineEdit *lineEdit;
     QVBoxLayout *verticalLayout;
     QTextBrowser *textBrowser;
     QHBoxLayout *horizontalLayout;
@@ -49,27 +58,23 @@ public:
     QLabel *label_10;
     QLabel *label_11;
     QLabel *label_12;
-    QLineEdit *lineEdit;
-    QHBoxLayout *horizontalLayout_3;
-    QLabel *label_16;
-    QLabel *label_15;
-    QLabel *label_14;
-    QLabel *label_13;
     QHBoxLayout *horizontalLayout_5;
+    QPushButton *pushButton;
     QPushButton *pushButton_2;
     QPushButton *pushButton_3;
-    QPushButton *pushButton_4;
-    QPushButton *pushButton;
+    QHBoxLayout *horizontalLayout_3;
+    QLabel *label_14;
+    QLabel *label_15;
     QHBoxLayout *horizontalLayout_4;
-    QLabel *label_20;
-    QLabel *label_19;
-    QLabel *label_18;
+    QLabel *label_16;
     QLabel *label_17;
+    QLabel *label_18;
+    QLabel *label_19;
     QHBoxLayout *horizontalLayout_6;
     QLineEdit *lineEdit_2;
-    QPushButton *pushButton_5;
-    QLineEdit *lineEdit_3;
     QPushButton *pushButton_6;
+    QLineEdit *lineEdit_3;
+    QPushButton *pushButton_7;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -84,6 +89,54 @@ public:
         gridLayout->setSpacing(6);
         gridLayout->setContentsMargins(11, 11, 11, 11);
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
+        horizontalLayout_8 = new QHBoxLayout();
+        horizontalLayout_8->setSpacing(6);
+        horizontalLayout_8->setObjectName(QStringLiteral("horizontalLayout_8"));
+        label_13 = new QLabel(centralWidget);
+        label_13->setObjectName(QStringLiteral("label_13"));
+
+        horizontalLayout_8->addWidget(label_13);
+
+
+        gridLayout->addLayout(horizontalLayout_8, 2, 1, 1, 1);
+
+        horizontalLayout_7 = new QHBoxLayout();
+        horizontalLayout_7->setSpacing(6);
+        horizontalLayout_7->setObjectName(QStringLiteral("horizontalLayout_7"));
+        label_20 = new QLabel(centralWidget);
+        label_20->setObjectName(QStringLiteral("label_20"));
+
+        horizontalLayout_7->addWidget(label_20);
+
+        label_21 = new QLabel(centralWidget);
+        label_21->setObjectName(QStringLiteral("label_21"));
+
+        horizontalLayout_7->addWidget(label_21);
+
+
+        gridLayout->addLayout(horizontalLayout_7, 5, 1, 1, 1);
+
+        horizontalLayout_9 = new QHBoxLayout();
+        horizontalLayout_9->setSpacing(6);
+        horizontalLayout_9->setObjectName(QStringLiteral("horizontalLayout_9"));
+        pushButton_4 = new QPushButton(centralWidget);
+        pushButton_4->setObjectName(QStringLiteral("pushButton_4"));
+
+        horizontalLayout_9->addWidget(pushButton_4);
+
+        pushButton_5 = new QPushButton(centralWidget);
+        pushButton_5->setObjectName(QStringLiteral("pushButton_5"));
+
+        horizontalLayout_9->addWidget(pushButton_5);
+
+
+        gridLayout->addLayout(horizontalLayout_9, 7, 1, 1, 1);
+
+        lineEdit = new QLineEdit(centralWidget);
+        lineEdit->setObjectName(QStringLiteral("lineEdit"));
+
+        gridLayout->addWidget(lineEdit, 9, 1, 1, 1);
+
         verticalLayout = new QVBoxLayout();
         verticalLayout->setSpacing(6);
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
@@ -167,40 +220,14 @@ public:
 
         gridLayout->addLayout(verticalLayout, 0, 1, 1, 1);
 
-        lineEdit = new QLineEdit(centralWidget);
-        lineEdit->setObjectName(QStringLiteral("lineEdit"));
-
-        gridLayout->addWidget(lineEdit, 4, 1, 1, 1);
-
-        horizontalLayout_3 = new QHBoxLayout();
-        horizontalLayout_3->setSpacing(6);
-        horizontalLayout_3->setObjectName(QStringLiteral("horizontalLayout_3"));
-        label_16 = new QLabel(centralWidget);
-        label_16->setObjectName(QStringLiteral("label_16"));
-
-        horizontalLayout_3->addWidget(label_16);
-
-        label_15 = new QLabel(centralWidget);
-        label_15->setObjectName(QStringLiteral("label_15"));
-
-        horizontalLayout_3->addWidget(label_15);
-
-        label_14 = new QLabel(centralWidget);
-        label_14->setObjectName(QStringLiteral("label_14"));
-
-        horizontalLayout_3->addWidget(label_14);
-
-        label_13 = new QLabel(centralWidget);
-        label_13->setObjectName(QStringLiteral("label_13"));
-
-        horizontalLayout_3->addWidget(label_13);
-
-
-        gridLayout->addLayout(horizontalLayout_3, 1, 1, 1, 1);
-
         horizontalLayout_5 = new QHBoxLayout();
         horizontalLayout_5->setSpacing(6);
         horizontalLayout_5->setObjectName(QStringLiteral("horizontalLayout_5"));
+        pushButton = new QPushButton(centralWidget);
+        pushButton->setObjectName(QStringLiteral("pushButton"));
+
+        horizontalLayout_5->addWidget(pushButton);
+
         pushButton_2 = new QPushButton(centralWidget);
         pushButton_2->setObjectName(QStringLiteral("pushButton_2"));
 
@@ -211,44 +238,50 @@ public:
 
         horizontalLayout_5->addWidget(pushButton_3);
 
-        pushButton_4 = new QPushButton(centralWidget);
-        pushButton_4->setObjectName(QStringLiteral("pushButton_4"));
 
-        horizontalLayout_5->addWidget(pushButton_4);
+        gridLayout->addLayout(horizontalLayout_5, 6, 1, 1, 1);
 
-        pushButton = new QPushButton(centralWidget);
-        pushButton->setObjectName(QStringLiteral("pushButton"));
+        horizontalLayout_3 = new QHBoxLayout();
+        horizontalLayout_3->setSpacing(6);
+        horizontalLayout_3->setObjectName(QStringLiteral("horizontalLayout_3"));
+        label_14 = new QLabel(centralWidget);
+        label_14->setObjectName(QStringLiteral("label_14"));
 
-        horizontalLayout_5->addWidget(pushButton);
+        horizontalLayout_3->addWidget(label_14);
+
+        label_15 = new QLabel(centralWidget);
+        label_15->setObjectName(QStringLiteral("label_15"));
+
+        horizontalLayout_3->addWidget(label_15);
 
 
-        gridLayout->addLayout(horizontalLayout_5, 3, 1, 1, 1);
+        gridLayout->addLayout(horizontalLayout_3, 3, 1, 1, 1);
 
         horizontalLayout_4 = new QHBoxLayout();
         horizontalLayout_4->setSpacing(6);
         horizontalLayout_4->setObjectName(QStringLiteral("horizontalLayout_4"));
-        label_20 = new QLabel(centralWidget);
-        label_20->setObjectName(QStringLiteral("label_20"));
+        label_16 = new QLabel(centralWidget);
+        label_16->setObjectName(QStringLiteral("label_16"));
 
-        horizontalLayout_4->addWidget(label_20);
-
-        label_19 = new QLabel(centralWidget);
-        label_19->setObjectName(QStringLiteral("label_19"));
-
-        horizontalLayout_4->addWidget(label_19);
-
-        label_18 = new QLabel(centralWidget);
-        label_18->setObjectName(QStringLiteral("label_18"));
-
-        horizontalLayout_4->addWidget(label_18);
+        horizontalLayout_4->addWidget(label_16);
 
         label_17 = new QLabel(centralWidget);
         label_17->setObjectName(QStringLiteral("label_17"));
 
         horizontalLayout_4->addWidget(label_17);
 
+        label_18 = new QLabel(centralWidget);
+        label_18->setObjectName(QStringLiteral("label_18"));
 
-        gridLayout->addLayout(horizontalLayout_4, 2, 1, 1, 1);
+        horizontalLayout_4->addWidget(label_18);
+
+        label_19 = new QLabel(centralWidget);
+        label_19->setObjectName(QStringLiteral("label_19"));
+
+        horizontalLayout_4->addWidget(label_19);
+
+
+        gridLayout->addLayout(horizontalLayout_4, 4, 1, 1, 1);
 
         horizontalLayout_6 = new QHBoxLayout();
         horizontalLayout_6->setSpacing(6);
@@ -258,23 +291,23 @@ public:
 
         horizontalLayout_6->addWidget(lineEdit_2);
 
-        pushButton_5 = new QPushButton(centralWidget);
-        pushButton_5->setObjectName(QStringLiteral("pushButton_5"));
+        pushButton_6 = new QPushButton(centralWidget);
+        pushButton_6->setObjectName(QStringLiteral("pushButton_6"));
 
-        horizontalLayout_6->addWidget(pushButton_5);
+        horizontalLayout_6->addWidget(pushButton_6);
 
         lineEdit_3 = new QLineEdit(centralWidget);
         lineEdit_3->setObjectName(QStringLiteral("lineEdit_3"));
 
         horizontalLayout_6->addWidget(lineEdit_3);
 
-        pushButton_6 = new QPushButton(centralWidget);
-        pushButton_6->setObjectName(QStringLiteral("pushButton_6"));
+        pushButton_7 = new QPushButton(centralWidget);
+        pushButton_7->setObjectName(QStringLiteral("pushButton_7"));
 
-        horizontalLayout_6->addWidget(pushButton_6);
+        horizontalLayout_6->addWidget(pushButton_7);
 
 
-        gridLayout->addLayout(horizontalLayout_6, 5, 1, 1, 1);
+        gridLayout->addLayout(horizontalLayout_6, 10, 1, 1, 1);
 
         ConsoleUI->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(ConsoleUI);
@@ -295,6 +328,11 @@ public:
 
     void retranslateUi(QMainWindow *ConsoleUI) {
         ConsoleUI->setWindowTitle(QApplication::translate("ConsoleUI", "ConsoleUI", Q_NULLPTR));
+        label_13->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
+        label_20->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
+        label_21->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
+        pushButton_4->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
+        pushButton_5->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
         label->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
         label_2->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
         label_3->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
@@ -307,20 +345,17 @@ public:
         label_10->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
         label_11->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
         label_12->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
-        label_16->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
-        label_15->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
-        label_14->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
-        label_13->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
+        pushButton->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
         pushButton_2->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
         pushButton_3->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
-        pushButton_4->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
-        pushButton->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
-        label_20->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
-        label_19->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
-        label_18->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
+        label_14->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
+        label_15->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
+        label_16->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
         label_17->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
-        pushButton_5->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
+        label_18->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
+        label_19->setText(QApplication::translate("ConsoleUI", "TextLabel", Q_NULLPTR));
         pushButton_6->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
+        pushButton_7->setText(QApplication::translate("ConsoleUI", "PushButton", Q_NULLPTR));
     } // retranslateUi
 
 };

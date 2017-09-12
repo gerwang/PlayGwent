@@ -29,19 +29,25 @@ ConsoleView::ConsoleView(QObject *parent) {
                                     mainwindow->ui->label_16,
                                     mainwindow->ui->label_17,
                                     mainwindow->ui->label_18,
-                                    mainwindow->ui->label_19};
+                                    mainwindow->ui->label_19,
+                                    mainwindow->ui->label_20,
+                                    mainwindow->ui->label_21};
     for (int i = 0; i < LABEL_NUM; i++) {
         pQLabel[i] = tempLabel[i];
     }
     pLineEdit = mainwindow->ui->lineEdit;
     QPushButton *tempButton[BUTTON_NUM] = {mainwindow->ui->pushButton,
                                            mainwindow->ui->pushButton_2,
-                                           mainwindow->ui->pushButton_3};
+                                           mainwindow->ui->pushButton_3,
+                                           mainwindow->ui->pushButton_4,
+                                           mainwindow->ui->pushButton_5};
     for (int i = 0; i < BUTTON_NUM; i++) {
         pQPushButton[i] = tempButton[i];
+        pQPushButton[i]->setText(PushButtonText[i]);
+        pQPushButton[i]->setEnabled(false);
     }
-    inputBuffer[0] = new ConsoleIOBuffer(mainwindow->ui->pushButton_5, mainwindow->ui->lineEdit_2);
-    inputBuffer[1] = new ConsoleIOBuffer(mainwindow->ui->pushButton_6, mainwindow->ui->lineEdit_3);
+    inputBuffer[0] = new ConsoleIOBuffer(mainwindow->ui->pushButton_6, mainwindow->ui->lineEdit_2);
+    inputBuffer[1] = new ConsoleIOBuffer(mainwindow->ui->pushButton_7, mainwindow->ui->lineEdit_3);
 
     playerInputState[0] = playerInputState[1] = AbstractUI::RejectAll;
     textBrowser = mainwindow->ui->textBrowser;
@@ -55,6 +61,7 @@ ConsoleView::ConsoleView(QObject *parent) {
         validRow[row] = false;
     }
     currentPlayer = localPlayer = -1;
+    leader = nullptr;
 }
 
 ConsoleView::~ConsoleView() {
@@ -184,6 +191,9 @@ void ConsoleView::display() {
     textBrowser->append(tr("Player %1's turn in scene %2").arg(currentPlayer).arg(SceneMSG[currentScene]));
     for (int row = 0; row < ROW_NUM; row++) {
         displayCardSlotInfo(row);
+    }
+    if (leader != nullptr) {
+        textBrowser->append("leader" + leader->getCardName());
     }
     textBrowser->append("end-------------------------------------------------------------------");
 }
@@ -394,6 +404,7 @@ void ConsoleView::execMessageBox(const QString &title, const QString &message, i
     QMessageBox messageBox;
     messageBox.setWindowTitle(title);
     messageBox.setText(message);
+    messageBox.setStandardButtons(QMessageBox::NoButton);
     QTimer::singleShot(duration, &loop, &QEventLoop::quit);
     messageBox.show();
     loop.exec();
@@ -466,5 +477,13 @@ void ConsoleView::clearAllWeatherOnBattlefield() {
     for (int row = Player1_Siege; row <= Player0_Siege; row++) {
         rowWeather[row] = Sunny;
     }
+}
+
+void ConsoleView::setLineEditText(const QString &text) {
+    pLineEdit->setText(text);
+}
+
+QString ConsoleView::getLineEditText() {
+    return pLineEdit->text();
 }
 
