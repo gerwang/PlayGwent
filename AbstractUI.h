@@ -8,7 +8,7 @@
 #include <QObject>
 #include <QList>
 #include <QPoint>
-#include "cardinfo.h"
+#include "CardInfo.h"
 #include "GameConstant.h"
 #include "GameAssets.h"
 
@@ -30,10 +30,6 @@ public:
 
     virtual void releaseSource()=0;//when user click right mouse
 
-//    virtual void addTarget(int row, int column)=0;// there can be MULTIPLE targets!
-
-//    virtual void removeTarget(int row, int column)=0;
-
     virtual void setPlayerInputState(int player, InputState state)=0;
 
     virtual void setValidRow(int row)=0;
@@ -49,38 +45,15 @@ public:
     virtual void moveCard(int fromR, int fromC, int toR, int toC)=0;
     //the dead card will be moved to graveyard by logic, because unseen elder's swallow will move the cards together
 
-//    virtual void removeCard(int fromR, int fromC)=0;//remove from the game
-
-//    virtual void spawnCard(int toR, int toC, CardInfo *info)=0;
-
     virtual void getUserInput(Command &clicktype, int &row, int &column, int player)=0;
 
     virtual void setRowWeather(int row, Weather weatherType)=0;
 
     virtual void clearAllWeatherOnBattlefield()=0;
 
-//    virtual void showSelfDamage(const QList<QPoint> &targets)=0;
-
-//    virtual void showDamage(QPoint source,
-//                            const QList<QPoint> &targets)=0;//show damage visual effects(animations) from source to MULTIPLE targets
-
-//    virtual void showSelfBoost(const QList<QPoint> &targets)=0;
-
-//    virtual void showBoost(QPoint source,
-//                           const QList<QPoint> &targets)=0;
-
-//    virtual void showSwallow(QPoint source,
-//                             const QList<QPoint> &targets)=0;
-
     virtual void setCurrentPlayer(int player)=0;//switched by logic every turn
+
     virtual void setLocalPlayer(int player)=0;//set local player at the beginning of the game
-
-//    virtual void showTimer(double timeleft)=0;
-
-//    virtual void clearTimer()=0;
-
-    // not implemented yet
-//    virtual void setEnableAnimation(bool enabled)=0; obselete
 
     virtual void setWholeRowValidPositions(int row)=0;
 
@@ -111,8 +84,6 @@ public:
     virtual void showDamage(QPoint src, const QList<QPoint> &dests)=0;
 
     virtual void spawnNewCard(CardInfo *card, int row, int column)=0;
-    //notify the logic that the interface has received a VALID user input,
-    // but leave rightclick and stopfollow to be judged by logic                obselete
 };
 
 

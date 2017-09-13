@@ -5,7 +5,20 @@
 #ifndef PLAYGWENT_GAMECONSTANT_H_H
 #define PLAYGWENT_GAMECONSTANT_H_H
 
+#include <QPointF>
+
+const QPointF SceneOriginPoint[4] = {QPointF(1600, 0), QPointF(0, -900), QPointF(-1600, 0), QPointF(0, 0)};
+
 const int ROW_NUM = 20;//the num of row on battlefield
+
+const double CardExpandAnimScale = 1.2;
+const int CardExpandAnimDuration = 100;
+const int CardFlipHalfDuration = 200;
+const int CardRotateCDDuration = 900;
+const int CardArrayMakePlaceDuration = 500;
+const int WeatherChangeDuration = 2000;
+const double MouseWheelSpeed = 0.9;
+const int SwitchSceneDuration = 800;
 
 const QString CardSlotMSG[ROW_NUM] =
         {
@@ -110,7 +123,7 @@ const QString WeatherMSG[4] = {
 //TODO there should be a lineedit to edit the deck name
 
 enum Command {
-    LeftClick, RightClick, Pass, Escape, SaveDeck, ClipboardImport, ClipboardExport
+    LeftClick, RightClick, Pass, EscapeChoose, SaveDeck, ClipboardImport, ClipboardExport
 };
 
 const QString PushButtonText[BUTTON_NUM] = {
@@ -153,5 +166,18 @@ const QList<QString> LeaderNameList = {
         "Unseen_Elder",
         "Dagon"
 };
+
+const int ModeArea[ROW_NUM] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0};
+const int DefaultFace[ROW_NUM] = {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0};
+const int CardWidth[ROW_NUM] = {76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 245, 245, 95, 76, 76, 76, 76, 253};
+const int ArgOne[ROW_NUM] = {76, 76, 745, 640, 640, 640, 640, 640, 640, 745, 76, 76, 84, 84, 17, 758, 845, 845, 845,
+                             800};
+const int ArgTwo[ROW_NUM] = {0, 0, 9, 10, 10, 10, 10, 10, 10, 9, 0, 0, 800, 800, 800, 9, 10, 10, 10, 31};
+const int PosX[ROW_NUM] = {1330, 1430, 439, 477, 477, 477, 477, 477, 477, 439, 1430, 1330, 333, 333, 418, 418, 373, 373,
+                           373, 51};
+const int PosY[ROW_NUM] = {14, 14, 14, 160, 250, 347, 471, 574, 671, 787, 787, 787, 272, 910, 663, 442, 324, 206, 100,
+                           260};
+const QPointF SpiritPosition[4] = {QPointF(-1, -1), QPointF(1313, 178), QPointF(1309, 120), QPointF(-1, -1)};
+const QPointF LeaderPosition = QPointF(161, 630);
 
 #endif //PLAYGWENT_GAMECONSTANT_H_H

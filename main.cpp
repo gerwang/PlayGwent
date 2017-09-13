@@ -3,8 +3,9 @@
 #include "ConsoleView.h"
 #include "GameController.h"
 #include "ConsoleView.h"
-#include "logindialog.h"
-#include "roomdialog.h"
+#include "LoginDialog.h"
+#include "RoomDialog.h"
+#include "GraphicsUI.h"
 
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
@@ -56,13 +57,10 @@ int main(int argc, char *argv[]) {
     GameController::controller()->getGameUI()->setLocalPlayer(0);
     GameController::controller()->startGame();
      */
-//    GameController::controller()->setAssets(new GameAssets);
-//    GameController::controller()->setGameUI(new ConsoleView);
-//    GameController::controller()->startDeckBuilder();
+    GameController::controller()->setAssets(new GameAssets);
+    GameController::controller()->setGameUI(new GraphicsUI);
+    GameController::controller()->startDeckBuilder();
 //    LoginDialog dialog;
 //    qDebug() << dialog.exec();
-    RoomDialog dialog;
-    dialog.exec();
-    qDebug() << dialog.getSelectedGame() << dialog.getSelectedPlayer();
     return a.exec();
 }

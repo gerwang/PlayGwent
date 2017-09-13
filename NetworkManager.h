@@ -12,6 +12,7 @@
 #include <QJsonDocument>
 
 class NetworkManager : public QObject {
+Q_OBJECT
 private:
     QTcpSocket socket;
 

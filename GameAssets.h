@@ -7,7 +7,7 @@
 
 
 #include <QtCore/QObject>
-#include "cardinfo.h"
+#include "CardInfo.h"
 #include "GameConstant.h"
 #include "Deck.h"
 #include <algorithm>

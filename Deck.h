@@ -5,7 +5,7 @@
 #ifndef PLAYGWENT_DECK_H
 #define PLAYGWENT_DECK_H
 
-#include "cardinfo.h"
+#include "CardInfo.h"
 #include <QObject>
 #include <QJsonObject>
 #include <QJsonArray>

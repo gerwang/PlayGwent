@@ -3,3 +3,7 @@
 //
 
 #include "ScreenInputBuffer.h"
+
+void ScreenInputBuffer::getUserInput(Command &command, int &row, int &column) {
+
+}

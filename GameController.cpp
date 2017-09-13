@@ -210,7 +210,7 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
                     gameUI->switchToScene(AbstractUI::PlayerChooserScene);
                 }
             }
-        } else if (command == Command::Escape) {//map two buttons to a same command
+        } else if (command == Command::EscapeChoose) {//map two buttons to a same command
             //already use a message box to ensure the opearation via UI
             break;
         }
@@ -787,8 +787,8 @@ void GameController::prepareChooseDecks() {
             if (deck.parseDeckFromString(jsonStr) == 0) {//no error
                 assets->getDecks().append(deck);
                 CardInfo *card = CardInfo::createByName(deck.getLeader());
-                card->setCardName(deck.getName());
                 performSpawnCardToPos(card, Player_Candidate, assets->getCardArray(Player_Candidate).size());
+                card->setCardName(deck.getName());
             }
         }
     }

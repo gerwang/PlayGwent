@@ -24,7 +24,7 @@ void ConsoleIOBuffer::getUserInput(Command &command, int &row, int &column) {
     } else if (stringCommand[0].toLatin1() == 'p') {
         command = Command::Pass;
     } else if (stringCommand[0].toLatin1() == 'e') {
-        command = Command::Escape;
+        command = Command::EscapeChoose;
     } else if (stringCommand[0].toLatin1() == 's') {
         command = Command::SaveDeck;
     } else if (stringCommand[0].toLatin1() == 'i') {

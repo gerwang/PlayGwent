@@ -6,7 +6,7 @@
 #define PLAYGWENT_CARDMONITORBASE_H
 
 #include <QObject>
-#include "../cardinfo.h"
+#include "../CardInfo.h"
 #include "../GameConstant.h"
 
 class CardMonitorBase : public QObject {
