@@ -271,7 +271,7 @@ void CardWidget::spiritExitScene() {
 }
 
 void CardWidget::rotateCDAnimation(int direction, int loopCount) {
-    QGraphicsPixmapItem timerItem(timerIcon.scaledToWidth(250, Qt::SmoothTransformation), this);
+    QGraphicsPixmapItem timerItem(timerIcon.scaledToWidth(80, Qt::SmoothTransformation), this);
     timerItem.setPos(size().width() / 2, size().height() / 2);
     QGraphicsItemAnimation animation;
     animation.setItem(&timerItem);

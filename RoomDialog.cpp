@@ -1,16 +1,26 @@
+#include <QtCore/QJsonArray>
+#include <QDebug>
 #include "RoomDialog.h"
 #include "ui_roomdialog.h"
 
-RoomDialog::RoomDialog(QWidget *parent) :
+RoomDialog::RoomDialog(const QJsonObject &content, QWidget *parent) :
         QDialog(parent),
         ui(new Ui::RoomDialog) {
     ui->setupUi(this);
-    for (int i = 0; i < 30; i++) {
-        ui->playerListWidget->addItem(new QListWidgetItem(QString::number(i), ui->playerListWidget));
-        ui->gameListWidget->addItem(new QListWidgetItem(QString::number(i), ui->gameListWidget));
-    }
     connect(ui->playerListWidget, &QListWidget::currentItemChanged, ui->gameListWidget, &QListWidget::clearSelection);
     connect(ui->gameListWidget, &QListWidget::currentItemChanged, ui->playerListWidget, &QListWidget::clearSelection);
+
+    if (content["command"].toString() != "respond_list") {
+        qWarning() << "not proper command!";
+    }
+    QJsonArray jsonHallPlayers = content["hallplayers"].toArray();
+    for (int i = 0; i < jsonHallPlayers.size(); i++) {
+        ui->playerListWidget->addItem(jsonHallPlayers[i].toString());
+    }
+    QJsonArray jsonGameArray = content["ongames"].toArray();
+    for (int i = 0; i < jsonGameArray.size(); i++) {
+        ui->gameListWidget->addItem(jsonGameArray[i].toString());
+    }
 
 }
 

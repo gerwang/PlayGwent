@@ -5,17 +5,26 @@
 #include "GameController.h"
 #include "SubclassRegister.h"
 #include "Deck.h"
+#include "GraphicsUI.h"
+#include "RoomDialog.h"
+#include "LoginDialog.h"
 #include <QGuiApplication>
 #include <QClipboard>
+#include <QApplication>
+#include <QtWidgets/QMessageBox>
 
 void GameController::startGame() {//player use which deck is already choosen
     //for cut line relink, no local variable is permitted
+
+    loadFromDeckAndJson();
     assets->setPreviousWinner(-1);//-1 means start or draw
     assets->setCurrentRound(0);
-    assets->setRoundStart(true);
-    GameController::controller()->getGameUI()->
-            loadCardFromAssets(GameController::controller()->getAssets());
-    //TODO modify the test code
+    assets->setRoundStatus(0);
+    assets->setCurrentPlayer(0);
+    QJsonObject object;
+    assets->toJson(object);
+    assets->fromJson(object);//TODO
+    gameUI->loadCardFromAssets(assets);
     gameUI->switchToScene(AbstractUI::GameScene);
     for (int player = 0; player < 2; player++) {
         assets->setPlayerWinRound(player, 0);
@@ -23,48 +32,36 @@ void GameController::startGame() {//player use which deck is already choosen
             assets->setPlayerScore(player, Round, 0);
         }
     }
-
-    while (gameLoop()) {
-        //TODO upload the current state to server
-    }
-    //game end, enter reporing interface
-    QString message = assets->getPlayerName(0) + tr(" VS ") + assets->getPlayerName(1) + tr("\n");
-    for (int roundCount = 0; roundCount < assets->getCurrentRound(); roundCount++) {
-        //the current new round will not be processed, so use < instead of <=
-        message += QString::number(assets->getPlayerScore(0, roundCount)) +
-                   tr(" : ") +
-                   QString::number(assets->getPlayerScore(1, roundCount)) +
-                   tr("\n");
-    }
-    QString title = tr("Game Draw!");
-    if (assets->getPlayerWinRound(0) < assets->getPlayerWinRound(1)) {
-        title = assets->getPlayerName(1) + tr(" wins the game!");
-    } else if (assets->getPlayerWinRound(0) > assets->getPlayerWinRound(1)) {
-        title = assets->getPlayerName(0) + tr(" wins the game!");
-    }
-    //CAUTION: compare win rounds when game end, not total score!
-    gameUI->execMessageBox(title, message, GameEndDuration);
-    //game end
-    cleanUpGame();
-    gameUI->switchToScene(AbstractUI::MainMenuScene);
+    enterGameLoop(false);
 }
 
-bool GameController::gameLoop() {
-    if (assets->isRoundStart()) {//round start not long before
-        assets->setRoundStart(false);
-        DestroyAllCardsOnBattlefield();//clear the battlefield
-        clearWeatherOnAllBattlefield();
-        for (int player = 0; player < 2; player++) {
-            assets->setPlayerPass(player, false);//always forget to initialize a new round
+void GameController::gameLoop() {
+    if (assets->getRoundStatus() < 2) {//round start not long before
+        if (assets->getRoundStatus() == 0) {
+            DestroyAllCardsOnBattlefield();//clear the battlefield
+            clearWeatherOnAllBattlefield();
+            for (int player = 0; player < 2; player++) {
+                assets->setPlayerPass(player, false);//always forget to initialize a new round
+            }
+            handleRedrawCard(0);
+            assets->setCurrentPlayer(1);//for player1 to choose card
+            if (gameUI->getLocalPlayer() == 0) {
+                transmitEndMessage();
+            }
+        } else if (assets->getRoundStatus() == 1) {
+            handleRedrawCard(1);
+            if (assets->getPreviousWinner() == -1) {
+                assets->setCurrentPlayer(-1);
+            } else {
+                assets->setCurrentPlayer(assets->getPreviousWinner());
+            }
+            if (gameUI->getLocalPlayer() == 1) {
+                transmitEndMessage();
+            }
         }
-        handleRedrawCard();
-        if (assets->getPreviousWinner() == -1) {//start or draw
-            gameUI->playRandomCoinAnimation();//let ui play the animation
-            setCurrentPlayerForAssetsAndUI(qrand() % 2);
-        } else {
-            setCurrentPlayerForAssetsAndUI(assets->getPreviousWinner());
-        }
+        assets->setRoundStatus(assets->getRoundStatus() + 1);
     } else {//users' turn start
+        gameUI->setAnimationFlag(true);
         emit onTurnStart();//calculate weather and abilities here
         const int currentPlayer = assets->getCurrentPlayer();
         if (!assets->getPlayerPass(currentPlayer)) {//player not pass
@@ -79,15 +76,23 @@ bool GameController::gameLoop() {
 
                     gameUI->setPlayerInputState(currentPlayer, AbstractUI::MustValidTarget);
                     gameUI->setWholeRowValidPositions(assets->getHandIndex(currentPlayer));
-                    gameUI->setButtonEnabled(BUTTON_PASS, true);
+
+                    if (gameUI->getLocalPlayer() == assets->getCurrentPlayer()) {
+                        gameUI->setButtonEnabled(BUTTON_PASS, true);
+                    }
                     Command command;
                     int row, column;
                     gameUI->getUserInput(command, row, column, currentPlayer);
-                    gameUI->setButtonEnabled(BUTTON_PASS, false);
+                    if (gameUI->getLocalPlayer() == assets->getCurrentPlayer()) {
+                        gameUI->setButtonEnabled(BUTTON_PASS, false);
+                    }
                     gameUI->resetValidPositions();
                     gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
 
-                    if (command == Command::Pass) {
+                    if (command == Command::Offline) {
+                        randomlyMoveOneCardFromHandToGraveyard(currentPlayer);
+                        assets->setHandled(true);
+                    } else if (command == Command::Pass) {
                         //user choose to pass
                         assets->setHandled(true);// no need to request another user input
                         setPlayerPassAndJudgeRoundEnd(currentPlayer);
@@ -101,13 +106,18 @@ bool GameController::gameLoop() {
                 }
             }
         }
-        if (assets->isGameEnd()) {
-            return false;
+        gameUI->setAnimationFlag(false);
+        if (gameUI->getLocalPlayer() == currentPlayer) {
+            transmitEndMessage();
+        }
+        if (assets->isGameEnd()) {//some hint for server to judge the player next round
+            assets->setCurrentPlayer(assets->getWinner());
+        } else if (assets->isAllPlayerPass()) {//round end, but game not end
+            assets->setCurrentPlayer(0);//for player 0 to choose card
         } else {
-            setCurrentPlayerForAssetsAndUI(currentPlayer ^ 1);//play animation, may block
+            assets->setCurrentPlayer(currentPlayer ^ 1);
         }
     }
-    return true;
 }
 
 void GameController::moveCardToRightTop(CardInfo *mover, int targetRow) {
@@ -172,6 +182,7 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
             &seleted = assets->getCardArray(seletedIndex),
             &supplement = assets->getCardArray(supplementIndex);
 
+    gameUI->getRowCardArrayWidget(Player_Candidate)->setPos(PosX[Player_Candidate], PosY[Player_Candidate]);
     gameUI->setLabelText(Player_CardChooser_Title, title);
 
     int cardChoosed = 0;
@@ -179,13 +190,17 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
 
         Command command;
         int row, column;
-        gameUI->setButtonEnabled(ESCAPE, allowEscape);
+        if (gameUI->getLocalPlayer() == player) {
+            gameUI->setButtonEnabled(ESCAPE, allowEscape);
+        }
         gameUI->setWholeRowValidPositions(candidateIndex);
         gameUI->setPlayerInputState(player, AbstractUI::MustValidTarget);
         gameUI->getUserInput(command, row, column, player);
         gameUI->setPlayerInputState(player, AbstractUI::RejectAll);
         gameUI->resetValidPositions();
-        gameUI->setButtonEnabled(ESCAPE, false);
+        if (gameUI->getLocalPlayer() == player) {
+            gameUI->setButtonEnabled(ESCAPE, false);
+        }
 
         if (command == Command::LeftClick) {//must be a valid input (filtered by UI)
             if (row != candidateIndex) {
@@ -199,7 +214,9 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
                 //find the topmost item that are not in the blacklist according to NAME
                 int nextColumn = assets->findTopmostANameNotInB(supplement, seleted);
                 if (nextColumn != -1) {//really has one to supply
+                    gameUI->setAnimationFlag(true);
                     performMovePosToPos(supplementIndex, nextColumn, candidateIndex, column);
+                    gameUI->setAnimationFlag(false);
                 }
             }
         } else if (command == Command::RightClick) {
@@ -220,29 +237,35 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
     gameUI->setLabelText(Player_CardChooser_Title, "");//clean up
 }
 
-void GameController::handleRedrawCard() {//handle two players' redraw card
-    for (int player = 0; player < 2; player++) {
-        //add card from deck to hand first
-        moveNCardsFromDeckToHand(player, NumberToChoose[assets->getCurrentRound()]);
+void GameController::handleRedrawCard(int player) {//handle two players' redraw card
+    //add card from deck to hand first
+    moveNCardsFromDeckToHand(player, NumberToChoose[assets->getCurrentRound()]);
 
-        gameUI->switchToScene(AbstractUI::PlayerChooserScene);
+    if (gameUI->getLocalPlayer() != -1 && player != gameUI->getLocalPlayer()) {
+        gameUI->getRowCardArrayWidget(Player_Candidate)->setDefaultFace(1);
+    }
 
-        //perform move card from hand to candidate
-        int handIndex = assets->getHandIndex(player);
-        performMoveAllCardsFromAToB(handIndex, Player_Candidate);
+    gameUI->switchToScene(AbstractUI::PlayerChooserScene);
 
-        int deckIndex = assets->getDeckIndex(player);
-        performChooseCard(Player_Candidate, Player_Seleted,
-                          deckIndex, NumberToRedraw[assets->getCurrentRound()], player,
-                          true, true, true, tr("%1 is choosing %2 card(s)").arg(
-                        assets->getPlayerName(player)).arg(NumberToRedraw[assets->getCurrentRound()]));
+    //perform move card from hand to candidate
+    int handIndex = assets->getHandIndex(player);
+    performMoveAllCardsFromAToB(handIndex, Player_Candidate);
 
-        //insert the seleted randomly to deck
-        performRandomlyMoveAllCardsFromAToB(Player_Seleted, deckIndex);
-        //perform move candidate BACK to hand
-        performMoveAllCardsFromAToB(Player_Candidate, handIndex);
+    int deckIndex = assets->getDeckIndex(player);
+    performChooseCard(Player_Candidate, Player_Seleted,
+                      deckIndex, NumberToRedraw[assets->getCurrentRound()], player,
+                      true, true, true, tr("%1 is choosing %2 card(s)").arg(
+                    assets->getPlayerName(player)).arg(NumberToRedraw[assets->getCurrentRound()]));
 
-        gameUI->switchToScene(AbstractUI::GameScene);
+    //insert the seleted randomly to deck
+    performRandomlyMoveAllCardsFromAToB(Player_Seleted, deckIndex);
+    //perform move candidate BACK to hand
+    performMoveAllCardsFromAToB(Player_Candidate, handIndex);
+
+    gameUI->switchToScene(AbstractUI::GameScene);
+
+    if (gameUI->getLocalPlayer() != -1 && player != gameUI->getLocalPlayer()) {
+        gameUI->getRowCardArrayWidget(Player_Candidate)->setDefaultFace(0);
     }
 }
 
@@ -254,9 +277,12 @@ void GameController::performRandomlyMoveAllCardsFromAToB(int fromR, int toR) {
 }
 
 void GameController::performMoveAllCardsFromAToB(int fromR, int toR) {//must follow the order
+    bool prevFlag = gameUI->isAnimationFlag();
+    gameUI->setAnimationFlag(false);
     while (!assets->getCardArray(fromR).empty()) {//from left to right or from buttom to top
         performMoveCardToRightTop(fromR, 0, toR);
     }
+    gameUI->setAnimationFlag(prevFlag);
 }
 
 void GameController::performMoveCardToRightTop(int row, int column, int targetRow) {
@@ -298,25 +324,24 @@ void GameController::setPlayerPassAndJudgeRoundEnd(int currentPlayer) {
 
         QString message = tr("Round") + QString::number(currentRound + 1);
 
-        int localPlayer = gameUI->getLocalPlayer();//TODO : modify it to use player0 and player1
-        if (combatValue[localPlayer] < combatValue[localPlayer ^ 1]) {
-            message += tr(" Lose!");
-            assets->addPlayerWinRound(localPlayer ^ 1);
-            assets->setPreviousWinner(localPlayer ^ 1);
-        } else if (combatValue[localPlayer] == combatValue[localPlayer ^ 1]) {
+        if (combatValue[0] < combatValue[1]) {
+            message += assets->getPlayerName(1) + tr(" Win!");
+            assets->addPlayerWinRound(1);
+            assets->setPreviousWinner(1);
+        } else if (combatValue[0] == combatValue[1]) {
             message += tr(" Draw!");
             assets->setPreviousWinner(-1);//dummy value, draw
-        } else if (combatValue[localPlayer] > combatValue[localPlayer ^ 1]) {
-            message += tr(" Win!");
-            assets->addPlayerWinRound(localPlayer);
-            assets->setPreviousWinner(localPlayer);
+        } else if (combatValue[0] > combatValue[1]) {
+            message += assets->getPlayerName(0) + tr(" Win!");
+            assets->addPlayerWinRound(0);
+            assets->setPreviousWinner(0);
         }
         message += tr("\n%1 : %2\n%3 %4").arg(assets->getPlayerName(0)).arg(assets->getPlayerName(1)).arg(
                 combatValue[0]).arg(combatValue[1]);
 
         gameUI->execMessageBox(tr("Round Ended"), message, RoundEndDuration);
         assets->addCurrentRound();
-        assets->setRoundStart(true);//start another round
+        assets->setRoundStatus(0);//start another round
     }
 }
 
@@ -342,10 +367,6 @@ void GameController::moveToGraveyard(CardInfo *mover) {
 
 AbstractUI *GameController::getGameUI() const {
     return gameUI;
-}
-
-void GameController::setGameUI(AbstractUI *gameUI) {
-    GameController::gameUI = gameUI;
 }
 
 void GameController::setAssets(GameAssets *assets) {
@@ -621,6 +642,12 @@ void GameController::cleanUpGame() {
     for (int row = Player1_Graveyard; row <= Player0_Graveyard; row++) {
         cleanUpRow(row);
     }
+    gameUI->getOutputBuffers().clear();
+    for (int player = 0; player < 2; player++) {
+        gameUI->setPlayerInputBuffer(player, nullptr);
+        setPlayerName(player, "");
+    }
+    gameUI->setLocalPlayer(0);
 }
 
 void GameController::updateLabel() {
@@ -660,6 +687,7 @@ void GameController::startDeckBuilder() {
     gameUI->setButtonEnabled(CLIPBOARD_EXPORT, true);
     gameUI->setButtonEnabled(SAVEDECK, true);
     gameUI->setPlayerInputState(0, AbstractUI::MustValidTarget);
+    gameUI->setAnimationFlag(true);
     while (true) {
         Command command;
         int row, column;
@@ -672,7 +700,7 @@ void GameController::startDeckBuilder() {
                     performMoveToNeighbor(targetRow, seletedCard);
                 } else {
                     gameUI->execMessageBox(tr("invalid move"), tr("do not meet the card standard"),
-                                           RoundEndDuration);//TODO toggle the value
+                                           RoundEndDuration);
                 }
             } else {
                 performMoveToNeighbor(DeckBuilder_Candidate, seletedCard);
@@ -686,23 +714,25 @@ void GameController::startDeckBuilder() {
             QClipboard *clipboard = QGuiApplication::clipboard();
             int error = outerDeck.parseDeckFromString(clipboard->text());
             if (error == 0) {
+                gameUI->setAnimationFlag(false);
                 performMoveAccordingToDeck(outerDeck);
+                gameUI->setAnimationFlag(true);
             } else if (error == 1) {
                 gameUI->execMessageBox(tr("syntax error"), tr("cannot parse clipboard"),
-                                       RoundEndDuration);//TODO toggle the duration
+                                       RoundEndDuration);
             } else if (error == 2) {
-                gameUI->execMessageBox(tr("invalid deck"), tr("too many same cards"),
-                                       RoundEndDuration);//TODO toggle the duration
+                gameUI->execMessageBox(tr("invalid deck"), tr("Your deck is invalid"),
+                                       RoundEndDuration);
             }
         } else if (command == Command::SaveDeck) {
             if (!assets->isDeckValidSave()) {
                 gameUI->execMessageBox(tr("cannot save deck"), tr("card numbers do not meet the requirement"),
-                                       RoundEndDuration);//TODO toggle
+                                       RoundEndDuration);
             } else {
                 QFile file("assets/card_decks/" + gameUI->getLineEditText() + ".json");
                 if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
                     gameUI->execMessageBox(tr("cannot save deck"), tr("open file failed!"),
-                                           RoundEndDuration);//TODO toggle
+                                           RoundEndDuration);
                 } else {
                     Deck currentDeck = currentStateToDeck();
                     file.write(currentDeck.toJsonStr());
@@ -712,6 +742,7 @@ void GameController::startDeckBuilder() {
             }
         }
     }
+    gameUI->setAnimationFlag(false);
     gameUI->setPlayerInputState(0, AbstractUI::RejectAll);
     gameUI->setButtonEnabled(SAVEDECK, false);
     gameUI->setButtonEnabled(CLIPBOARD_IMPORT, false);
@@ -720,13 +751,14 @@ void GameController::startDeckBuilder() {
     deckBuilderCleanUp();
 }
 
-void GameController::deckBuilderInit() {
+
+Deck GameController::performChooseDeck(bool allowNewDeck) {
     gameUI->switchToScene(AbstractUI::PlayerChooserScene);
     //leader choose scene
-    prepareChooseDecks();
+    prepareChooseDecks(allowNewDeck);
 
     performChooseCard(Player_Candidate, Player_Seleted, Player_Seleted, 1, 0, false, false, false,
-                      tr("Please choose a deck to edit"));
+                      tr("Please choose a deck"));
     QString seletedName = assets->getCardArray(Player_Seleted).first()->getCardName();
 
     cleanUpRow(Player_Candidate);
@@ -755,23 +787,44 @@ void GameController::deckBuilderInit() {
             }
         }
     }
-
     assets->getDecks().clear();
+    return nowDeck;
+}
+
+void GameController::deckBuilderInit() {
+    gameUI->setLocalPlayer(0);
+    gameUI->setPlayerInputBuffer(0, ioBuffer);
+    gameUI->getOutputBuffers().append(ioBuffer);
+    network->logout();
+
+    Deck nowDeck = performChooseDeck(true);
+
+    gameUI->switchToScene(AbstractUI::DeckBuilderScene);
     initializeDeckCards();
     performMoveAccordingToDeck(nowDeck);
-    gameUI->switchToScene(AbstractUI::DeckBuilderScene);
 }
 
 void GameController::deckBuilderCleanUp() {
+    gameUI->setLocalPlayer(-1);
+    gameUI->setPlayerInputBuffer(0, nullptr);
+    gameUI->getOutputBuffers().clear();
+    if (network->login(username, password) != 0) {
+        std::exit(0);//terminate the game
+    }
     for (int row = DeckBuilder_Candidate; row <= DeckBuilder_Melee_Event; row++) {
         cleanUpRow(row);
     }
+
     assets->setLeaderName("");
+    gameUI->clearLeader();
+    assets->getLeaderInfo()->deleteLater();
+    assets->setLeaderInfo(nullptr);
+
     gameUI->setLineEditText("");
-    gameUI->switchToScene(AbstractUI::MainMenuScene);
+    QTimer::singleShot(1, this, &GameController::startMainMenu);
 }
 
-void GameController::prepareChooseDecks() {
+void GameController::prepareChooseDecks(bool allowNewDeck) {
     QDir deckDir("assets/card_decks");
     deckDir.setFilter(QDir::Files | QDir::NoSymLinks);
     QFileInfoList fileInfoList = deckDir.entryInfoList();
@@ -792,8 +845,10 @@ void GameController::prepareChooseDecks() {
             }
         }
     }
-    CardInfo *newDeckCard = CardInfo::createByName("New_Deck");
-    performSpawnCardToPos(newDeckCard, Player_Candidate, assets->getCardArray(Player_Candidate).size());
+    if (allowNewDeck) {
+        CardInfo *newDeckCard = CardInfo::createByName("New_Deck");
+        performSpawnCardToPos(newDeckCard, Player_Candidate, assets->getCardArray(Player_Candidate).size());
+    }
 }
 
 void GameController::performSpawnCardToPos(CardInfo *card, int row, int column) {
@@ -805,18 +860,30 @@ void GameController::performSpawnCardToPos(CardInfo *card, int row, int column) 
 void GameController::initializeDeckCards() {
     for (const auto &card:CardNameList) {
         CardInfo::Type type = Deck::getTypeByName(card);
+        QList<CardInfo *> &candidateRow = assets->getCardArray(DeckBuilder_Candidate);
         for (int cnt = 0; cnt < MaxSameTypeCount[type]; cnt++) {
-            performSpawnCardToPos(CardInfo::createByName(card), DeckBuilder_Candidate,
-                                  assets->getCardArray(DeckBuilder_Candidate).size());
+            candidateRow.append(CardInfo::createByName(card));
         }
     }
+    gameUI->loadARowFromAssets(DeckBuilder_Candidate, assets);
 }
 
 bool GameController::performMoveAccordingToDeck(Deck &deck) {
     for (int row = DeckBuilder_NoHP; row <= DeckBuilder_Melee_Event; row++) {
         performMoveAllCardsFromAToB(row, DeckBuilder_Candidate);
     }
+
     assets->setLeaderName(deck.getLeader());
+
+    if (assets->getLeaderInfo() != nullptr) {
+        gameUI->clearLeader();
+        assets->getLeaderInfo()->deleteLater();
+        assets->setLeaderInfo(nullptr);
+    }
+
+    assets->setLeaderInfo(CardInfo::createByName(assets->getLeaderName()));
+    gameUI->setLeader(assets->getLeaderInfo());
+
     gameUI->setLineEditText(deck.getName());
     for (const auto &cardName:deck.getCards()) {
         int index = assets->getCardIndexByName(DeckBuilder_Candidate, cardName);
@@ -857,20 +924,293 @@ Deck GameController::currentStateToDeck() {
 }
 
 void GameController::startMainMenu() {
-    gameUI->switchToScene(AbstractUI::MainMenuScene);
-    gameUI->setWholeRowValidPositions(Main_Menu);
-    gameUI->setPlayerInputState(0, AbstractUI::MustValidTarget);
-    //TODO
-    gameUI->setPlayerInputState(0, AbstractUI::RejectAll);
-    gameUI->resetValidPositions();
+    prepareMainMenu();
+    while (true) {
+        gameUI->setPlayerInputState(0, AbstractUI::MustValidTarget);
+        Command command;
+        int row, column;
+        gameUI->getUserInput(command, row, column, 0);
+        gameUI->setPlayerInputState(0, AbstractUI::RejectAll);
+        if (command == Command::LeftClick) {
+            QString cardName = assets->getCardArray(row).at(column)->getCardName();
+            if (cardName == "Match") {
+
+                gameDeck = performChooseDeck(false);
+
+                QMessageBox messageBox;
+                messageBox.setWindowTitle("Matching");
+                messageBox.setText("Finding appropriate player to compete with...");
+                messageBox.setStandardButtons(0);
+                messageBox.show();
+                QJsonObject request;
+
+                request.insert("command", "start_match");
+                QJsonObject jsonDeckObject;
+                gameDeck.toJson(jsonDeckObject);
+                request.insert("deck", jsonDeckObject);
+                network->writeJsonObject(request);
+
+                startFortune = network->readJsonObject();
+                messageBox.hide();
+
+                QTimer::singleShot(1, this, &GameController::startGame);
+                cleanUpMainMenu();
+                return;
+
+            } else if (cardName == "Server_Status") {
+
+                QJsonObject request;
+                request.insert("command", "get_list");
+                network->writeJsonObject(request);
+                request = network->readJsonObject();
+                RoomDialog dialog(request);
+                int result = dialog.exec();
+                if (result == QDialog::Accepted) {
+                    if (!dialog.getSelectedPlayer().isEmpty() &&
+                        dialog.getSelectedPlayer() != username) {//a player cannot invite himself
+
+                    } else if (!dialog.getSelectedGame().isEmpty()) {
+                        QJsonObject gamePost;
+                        gamePost.insert("command", "watch");
+                        gamePost.insert("gameName", dialog.getSelectedGame());
+                        network->writeJsonObject(gamePost);
+                        QJsonObject response = network->readJsonObject();
+                        if (response["command"].toString() != "respond_watch") {
+                            qWarning() << "invalid response";
+                        }
+                        if (response["validation"].toBool()) {
+                            QMessageBox messageBox;
+                            messageBox.setWindowTitle("Pending");
+                            messageBox.setText("Waiting for the current turn to end.");
+                            messageBox.setStandardButtons(0);
+                            messageBox.show();
+                            resumeFortune = network->readJsonObject();
+                            messageBox.hide();
+                            QString cmd = resumeFortune["command"].toString();
+                            if (cmd == "end") {
+                                QMessageBox::information(nullptr, tr("cannot watch game"),
+                                                         tr("game has already ended"));
+                            } else {
+                                cleanUpMainMenu();
+                                QTimer::singleShot(1, this, &GameController::resumeGame);
+                                return;
+                            }
+                        } else {
+                            QMessageBox::information(nullptr, tr("cannot watch game"), response["reason"].toString());
+                        }
+                    }
+                }
+
+            } else if (cardName == "Deck_Builder") {
+                QTimer::singleShot(0, this, &GameController::startDeckBuilder);
+                cleanUpMainMenu();
+                return;
+            }
+        }
+    }
 }
 
 void GameController::prepareMainMenu() {
-    //TODO
+    if (gameUI->getCurrentScene() != AbstractUI::MainMenuScene) {
+        gameUI->switchToScene(AbstractUI::MainMenuScene);
+    }
+    gameUI->setAnimationFlag(true);
+    static const QString MainMenuNameList[3] = {"Match", "Server_Status", "Deck_Builder"};
+    for (const auto &name:MainMenuNameList) {
+        performSpawnCardToPos(CardInfo::createByName(name), Main_Menu, assets->getCardArray(Main_Menu).size());
+    }
+    gameUI->setAnimationFlag(false);
+    gameUI->setLocalPlayer(0);
+    gameUI->setPlayerInputBuffer(0, ioBuffer);
+    gameUI->getOutputBuffers().append(ioBuffer);
+    gameUI->setWholeRowValidPositions(Main_Menu);
 }
 
 void GameController::cleanUpMainMenu() {
-    //TODO
+    gameUI->setLocalPlayer(0);
+    gameUI->setPlayerInputBuffer(0, nullptr);
+    gameUI->getOutputBuffers().clear();
+    gameUI->resetValidPositions();
+    cleanUpRow(Main_Menu);
+}
+
+void GameController::start() {
+    gameUI = new GraphicsUI();
+    assets = new GameAssets();
+    network = new NetworkManager();
+    ioBuffer = new ScreenIOBuffer();
+
+    bool resume;
+    while (true) {
+        getUserNameAndPassWord();
+        int result = network->login(username, password);
+        if (result != -1) {
+            resume = (result == 1);
+            break;
+        }
+    }
+
+    if (resume) {
+        resumeFortune = network->readJsonObject();
+        QString cmd = resumeFortune["command"].toString();
+        if (cmd == "end") {
+            QMessageBox::information(nullptr, tr("cannot watch game"),
+                                     tr("game has already ended"));
+        } else {
+            QTimer::singleShot(1, this, &GameController::resumeGame);
+            return;
+        }
+    } else {
+        QTimer::singleShot(1, this, &GameController::startMainMenu);
+    }
+}
+
+void GameController::getUserNameAndPassWord() {
+    LoginDialog loginDialog;
+    int result = loginDialog.exec();
+    if (result == QDialog::Accepted) {
+        username = loginDialog.getUserName();
+        password = loginDialog.getPassword();
+    } else {
+        std::exit(0);
+    }
+}
+
+void GameController::loadFromDeckAndJson() {
+    int localPlayer = startFortune["localplayer"].toInt();
+    gameUI->setLocalPlayer(localPlayer);
+
+    gameUI->setPlayerInputBuffer(localPlayer, ioBuffer);
+    gameUI->setPlayerInputBuffer(localPlayer ^ 1, network);
+
+    gameUI->getOutputBuffers().clear();
+    gameUI->getOutputBuffers().append(ioBuffer);
+    gameUI->getOutputBuffers().append(network);
+
+    setPlayerName(localPlayer, username);
+    setPlayerName(localPlayer ^ 1, startFortune["name"].toString());
+
+    assets->setRandomSeed(static_cast<unsigned int>(startFortune["seed"].toInt()));
+    assets->resetRandomSeed();
+    //must set randomseed before spawning deck
+
+    QJsonObject otherDeckObject = startFortune["deck"].toObject();
+    Deck otherDeck;
+    otherDeck.fromJson(otherDeckObject);
+    assets->clearAllGameRows();
+    if (localPlayer == 0) {
+        assets->loadPlayerFromDeck(0, gameDeck);
+        assets->loadPlayerFromDeck(1, otherDeck);
+    } else {
+        assets->loadPlayerFromDeck(0, otherDeck);
+        assets->loadPlayerFromDeck(1, gameDeck);
+    }
+}
+
+void GameController::uploadReadyState() {
+    QJsonObject readyInfo;
+    readyInfo.insert("command", "ready");
+    QJsonObject jsonGameState;
+    assets->toJson(jsonGameState);
+    readyInfo.insert("gameState", jsonGameState);
+    readyInfo.insert("gameEndFlag", assets->isGameEnd());
+    if (assets->isGameEnd()) {
+        readyInfo.insert("currentPlayer", assets->getWinner());
+    } else {
+        readyInfo.insert("currentPlayer", assets->getCurrentPlayer());
+    }
+    network->writeJsonObject(readyInfo);
+}
+
+bool GameController::getStartRoundInfo() {
+    QJsonObject startRoundInfo = network->readJsonObject();
+    if (startRoundInfo["command"].toString() == "startround") {
+        bool shouldRest = startRoundInfo["shouldreset"].toBool();
+        if (shouldRest) {
+            assets->resetRandomSeed();
+        }
+        int currentPlayerFromServer = startRoundInfo["currentplayer"].toInt();
+        if (assets->getCurrentPlayer() == -1) {
+            gameUI->playRandomCoinAnimation();
+        }
+        setCurrentPlayerForAssetsAndUI(currentPlayerFromServer);
+        return false;
+    } else if (startRoundInfo["command"] == "end") {
+        return true;
+    }
+}
+
+void GameController::randomlyMoveOneCardFromHandToGraveyard(int player) {
+    const QList<CardInfo *> &hand = assets->getCardArray(assets->getHandIndex(player));
+    int randomIndex = qrand() % hand.size();
+    int graveyardRow = (player == 0 ? Player0_Graveyard : Player1_Graveyard);
+    moveCardToRightTop(hand.at(randomIndex), graveyardRow);
+}
+
+void GameController::transmitEndMessage() {
+    QJsonObject endInfo;
+    endInfo.insert("command", "end_transmit");
+    network->writeJsonObject(endInfo);
+}
+
+void GameController::resumeGame() {
+    assets->fromJson(resumeFortune["gameState"].toObject());
+    gameUI->loadCardFromAssets(assets);
+    gameUI->switchToScene(AbstractUI::GameScene);
+    int localPlayer = -1;
+    for (int player = 0; player < 2; player++) {
+        if (assets->getPlayerName(player) == username) {
+            localPlayer = player;
+            break;
+        }
+    }
+    gameUI->setLocalPlayer(localPlayer);
+    gameUI->getOutputBuffers().clear();
+    if (localPlayer == -1) {
+        for (int player = 0; player < 2; player++) {
+            gameUI->setPlayerInputBuffer(player, network);
+        }
+    } else {
+        gameUI->getOutputBuffers().append(ioBuffer);
+        gameUI->setPlayerInputBuffer(localPlayer, ioBuffer);
+        gameUI->setPlayerInputBuffer(localPlayer ^ 1, network);
+    }
+    enterGameLoop(true);
+}
+
+void GameController::enterGameLoop(bool skipFirst) {
+    do {
+        if (skipFirst) {
+            skipFirst = false;
+        } else {
+            uploadReadyState();
+        }
+        if (getStartRoundInfo()) {//the game ends
+            break;
+        }
+        gameLoop();
+    } while (true);
+
+    //game end, enter reporting interface
+    QString message = assets->getPlayerName(0) + tr(" VS ") + assets->getPlayerName(1) + tr("\n");
+    for (int roundCount = 0; roundCount < assets->getCurrentRound(); roundCount++) {
+        //the current new round will not be processed, so use < instead of <=
+        message += QString::number(assets->getPlayerScore(0, roundCount)) +
+                   tr(" : ") +
+                   QString::number(assets->getPlayerScore(1, roundCount)) +
+                   tr("\n");
+    }
+    QString title = tr("Game Draw!");
+    if (assets->getPlayerWinRound(0) < assets->getPlayerWinRound(1)) {
+        title = assets->getPlayerName(1) + tr(" wins the game!");
+    } else if (assets->getPlayerWinRound(0) > assets->getPlayerWinRound(1)) {
+        title = assets->getPlayerName(0) + tr(" wins the game!");
+    }
+    //CAUTION: compare win rounds when game end, not total score!
+    gameUI->execMessageBox(title, message, GameEndDuration);
+    //game end
+    cleanUpGame();
+    QTimer::singleShot(1, this, &GameController::startMainMenu);
 }
 
 

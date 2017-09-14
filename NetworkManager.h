@@ -10,8 +10,10 @@
 #include <QTcpSocket>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include "AbstractInputBuffer.h"
+#include "AbstractOutputBuffer.h"
 
-class NetworkManager : public QObject {
+class NetworkManager : public QObject, public AbstractInputBuffer, public AbstractOutputBuffer {
 Q_OBJECT
 private:
     QTcpSocket socket;
@@ -26,6 +28,14 @@ public:
     void writeJsonObject(const QJsonObject &json);
 
     QJsonObject readJsonObject();
+
+    int login(const QString &username, const QString &password);
+
+    void logout();
+
+    void getUserInput(Command &command, int &row, int &column) override;
+
+    void writeUserOutput(Command command, int row, int column) override;
 
 public slots:
 

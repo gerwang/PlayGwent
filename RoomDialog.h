@@ -2,6 +2,7 @@
 #define ROOMDIALOG_H
 
 #include <QDialog>
+#include <QJsonObject>
 
 namespace Ui {
     class RoomDialog;
@@ -11,7 +12,7 @@ class RoomDialog : public QDialog {
 Q_OBJECT
 
 public:
-    explicit RoomDialog(QWidget *parent = 0);
+    explicit RoomDialog(const QJsonObject &content, QWidget *parent = 0);
 
     ~RoomDialog() override;
 

@@ -7,6 +7,8 @@
 
 #include "AbstractUI.h"
 #include "GameAssets.h"
+#include "GraphicsUI.h"
+#include "ScreenIOBuffer.h"
 #include <QObject>
 #include <QFutureSynchronizer>
 #include <QFuture>
@@ -19,8 +21,6 @@ public:
 
     GameAssets *getAssets() const;//only GameController Base can own the assets
 
-    void setGameUI(AbstractUI *gameUI);
-
     void setAssets(GameAssets *assets);
 
     static GameController *controller();
@@ -28,22 +28,32 @@ public:
     template<typename T>
     void registerProcessor(T *processor);//add inherited processor
 
-    void startGame();
-
-    void startDeckBuilder();
-
-    void startMainMenu();
-
     void setPlayerName(int player, const QString &name);
+
+    void start();
 
 private:
     static GameController *mainController;
 
-    AbstractUI *gameUI{};
+    GraphicsUI *gameUI{};
     GameAssets *assets{};
+    NetworkManager *network{};
+    ScreenIOBuffer *ioBuffer{};
 
+    QString username, password;
+    QJsonObject startFortune;
+    Deck gameDeck;
+    QJsonObject resumeFortune;
 
-    bool gameLoop();//return true if not end
+    void uploadReadyState();
+
+    void getUserNameAndPassWord();
+
+    void randomlyMoveOneCardFromHandToGraveyard(int player);
+
+    void gameLoop();//return true if not end
+
+    void transmitEndMessage();
 
     void controllerHandleBeforeMove(CardInfo *mover, int fromR, int toR);
 
@@ -56,7 +66,7 @@ private:
 
     void performRandomlyMoveAllCardsFromAToB(int fromR, int toR);
 
-    void handleRedrawCard();
+    void handleRedrawCard(int player);
 
     void DestroyAllCardsOnBattlefield();
 
@@ -78,7 +88,7 @@ private:
 
     void deckBuilderCleanUp();
 
-    void prepareChooseDecks();
+    void prepareChooseDecks(bool allowNewDeck);
 
     void performSpawnCardToPos(CardInfo *card, int row, int column);
 
@@ -90,9 +100,13 @@ private:
 
     Deck currentStateToDeck();
 
+    Deck performChooseDeck(bool allowNewDeck);
+
     void prepareMainMenu();
 
     void cleanUpMainMenu();
+
+    bool getStartRoundInfo();
 
 protected:
     GameController() = default;
@@ -144,6 +158,10 @@ public://functions declared here can only be called by monitors' controller()-> 
 
     void removeCardFromGame(CardInfo *card);
 
+    void loadFromDeckAndJson();
+
+    void enterGameLoop(bool skipFirst);
+
 signals:
 
     void afterMoveForUser(CardInfo *mover, int fromR, int toR);
@@ -169,6 +187,16 @@ signals:
     void afterWeatherChanged(int row, Weather oldWeather);
 
     void onWeatherDamage(int row, const QList<CardInfo *> &dests);
+
+public slots:
+
+    void startDeckBuilder();
+
+    void startMainMenu();
+
+    void startGame();
+
+    void resumeGame();
 };
 
 template<typename T>

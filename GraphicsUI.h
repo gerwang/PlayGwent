@@ -47,21 +47,24 @@ public:
 
     QPoint locateMousePosition(CardArrayWidget *arrayWidget, const QPointF &mousePos);
 
+    CardArrayWidget *getRowCardArrayWidget(int row);
+
 protected:
     void drawBackground(QPainter *painter, const QRectF &rect) override;
 
 private:
     ZoomGraphicsView view;
-    NetworkManager networkManager;
-public:
-    NetworkManager &getNetworkManager();
 
 private:
     int localPlayer;
     int currentPlayer;
     AbstractUI::InputState inputState;
     AbstractUI::Scene currentScene;
-    QList<AbstractOutputBuffer *> listeners;
+    QList<AbstractOutputBuffer *> outputBuffers;
+public:
+    QList<AbstractOutputBuffer *> &getOutputBuffers();
+
+private:
 
     QPushButton pushButton[BUTTON_NUM];
     QLineEdit lineEdit;
@@ -78,17 +81,23 @@ private:
     CardWidget *sourceGhost;
     CardWidget *coinWidget;
     CardWidget *source{};
+    CardWidget *leaderWidget;
 
     QGraphicsLineItem selectionLine;
 
     qreal focusPrevZValue{};
     QPoint ghostCoordinate{-1, -1};
 
-    bool needRelay{};
-public:
-    bool isNeedRelay() const;
+    AbstractInputBuffer *inputBuffer[2];
 
-    void setNeedRelay(bool needRelay);
+    bool animationFlag{};
+public:
+    bool isAnimationFlag() const;
+
+    void setAnimationFlag(bool animationFlag);
+
+public:
+    void setPlayerInputBuffer(int player, AbstractInputBuffer *input);
 
     void validateBeforeErase(CardWidget *cardwidget);
 
@@ -156,6 +165,15 @@ public:
 
     void spawnNewCard(CardInfo *card, int row, int column) override;
 
+    void swapGameFacePos();
+
+    void setLeader(CardInfo *leaderInfo);
+
+    void clearLeader();
+
+    void loadARowFromAssets(int row, GameAssets *assets);
+
+    void changePlayerOneVisible();
 };
 
 

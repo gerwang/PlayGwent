@@ -69,14 +69,6 @@ void GameAssets::resetRandomSeed() {
     qsrand(randomSeed);
 }
 
-bool GameAssets::isRoundStart() const {
-    return roundStart;
-}
-
-void GameAssets::setRoundStart(bool start) {
-    GameAssets::roundStart = start;
-}
-
 int GameAssets::getPreviousWinner() const {
     return previousWinner;
 }
@@ -236,14 +228,6 @@ void GameAssets::clearAllGameRows() {
     }
 }
 
-void GameAssets::loadPlayerDeck(const QList<QString> &zeroNameList,
-                                const QList<QString> &oneNameList) {
-    clearAllGameRows();
-    resetRandomSeed();//set random seed, no need to synchosize random bahavior
-    createCardsRandomlyOnNameListToRow(zeroNameList, Player0_Deck);
-    createCardsRandomlyOnNameListToRow(oneNameList, Player1_Deck);
-}
-
 void GameAssets::createCardsRandomlyOnNameListToRow(QList<QString> namelist, int row) {
     //randomize
     int n = namelist.size();
@@ -368,7 +352,7 @@ void GameAssets::setDeckTotalCount(int deckTotalCount) {
 }
 
 void GameAssets::fromJson(const QJsonObject &json) {
-    roundStart = json["roundStart"].toBool();
+    roundStatus = json["roundStatus"].toInt();
     previousWinner = json["previousWinner"].toInt();
     currentPlayer = json["currentPlayer"].toInt();
     currentRound = json["currentRound"].toInt();
@@ -376,17 +360,16 @@ void GameAssets::fromJson(const QJsonObject &json) {
     QJsonArray jsonCardArrays = json["cardarray"].toArray();
     for (int row = 0; row < jsonCardArrays.size(); row++) {
         cardarray[row].clear();
-        QJsonArray jsonArray = jsonCardArrays.at(row).toArray();
-        for (int column = 0; column < jsonCardArrays.size(); column++) {
+        QJsonArray childArray = jsonCardArrays.at(row).toArray();
+        for (int column = 0; column < childArray.size(); column++) {
             auto info = new CardInfo;
-            info->readFromJson(jsonCardArrays.at(column).toObject());
+            info->readFromJson(childArray.at(column).toObject());
             cardarray[row].append(info);
         }
     }
     QJsonArray jsonWeatherArray = json["rowWeather"].toArray();
     for (int row = 0; row < jsonWeatherArray.size(); row++) {
         rowWeather[row] = static_cast<Weather>(jsonWeatherArray.at(row).toInt());
-        //TODO check if it is okay
     }
     QJsonArray jsonPlayerWinRound = json["playerWinRound"].toArray();
     QJsonArray jsonPlayerPass = json["playerPass"].toArray();
@@ -406,14 +389,14 @@ void GameAssets::fromJson(const QJsonObject &json) {
 
 void GameAssets::toJson(QJsonObject &json) {
 
-    json.insert("roundStart", roundStart);
+    json.insert("roundStatus", roundStatus);
     json.insert("previosWinner", previousWinner);
     json.insert("currentPlayer", currentPlayer);
     json.insert("currentRound", currentRound);
     json.insert("handled", handled);
 
     QJsonArray jsonCardArrays;
-    for (int row = 0; row <= Player_Seleted; row++) {
+    for (int row = 0; row < ROW_NUM; row++) {
         QJsonArray jsonArray;
         for (auto info:cardarray[row]) {
             QJsonObject infoObject;
@@ -425,7 +408,7 @@ void GameAssets::toJson(QJsonObject &json) {
     json.insert("cardarray", jsonCardArrays);
 
     QJsonArray jsonWeatherArray;
-    for (int row = 0; row <= Player0_Siege; row++) {
+    for (int row = 0; row < ROW_NUM; row++) {
         jsonWeatherArray.append(static_cast<int>(rowWeather[row]));
         //TODO check if it is okay
     }
@@ -497,6 +480,37 @@ int GameAssets::getDeckBuilderTargetRow(CardInfo *card) {
     } else {
         return DeckBuilder_Melee_Event;
     }
+}
+
+CardInfo *GameAssets::getLeaderInfo() const {
+    return leaderInfo;
+}
+
+void GameAssets::setLeaderInfo(CardInfo *leaderInfo) {
+    GameAssets::leaderInfo = leaderInfo;
+}
+
+void GameAssets::loadPlayerFromDeck(int player, Deck &deck) {
+    createCardsRandomlyOnNameListToRow(deck.getCards(), getDeckIndex(player));
+    cardarray[getHandIndex(player)].append(CardInfo::createByName(deck.getLeader()));
+}
+
+int GameAssets::getWinner() {
+    if (playerWinRound[0] < playerWinRound[1]) {
+        return 1;
+    } else if (playerWinRound[0] > playerWinRound[1]) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
+int GameAssets::getRoundStatus() const {
+    return roundStatus;
+}
+
+void GameAssets::setRoundStatus(int roundStatus) {
+    GameAssets::roundStatus = roundStatus;
 }
 
 //you should always perform MOVE instead of REMOVE, case REMOVE is a really serios thing

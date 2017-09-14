@@ -15,10 +15,10 @@ const double CardExpandAnimScale = 1.2;
 const int CardExpandAnimDuration = 100;
 const int CardFlipHalfDuration = 200;
 const int CardRotateCDDuration = 900;
-const int CardArrayMakePlaceDuration = 300;
-const int WeatherChangeDuration = 2000;
-const double MouseWheelSpeed = 0.9;
-const int SwitchSceneDuration = 800;
+const int CardArrayMakePlaceDuration = 200;
+const int WeatherChangeDuration = 900;
+const double MouseWheelSpeed = 1.2;
+const int SwitchSceneDuration = 250;
 
 const QString CardSlotMSG[ROW_NUM] =
         {
@@ -123,7 +123,7 @@ const QString WeatherMSG[4] = {
 //TODO there should be a lineedit to edit the deck name
 
 enum Command {
-    LeftClick, RightClick, Pass, EscapeChoose, SaveDeck, ClipboardImport, ClipboardExport
+    LeftClick, RightClick, Pass, EscapeChoose, SaveDeck, ClipboardImport, ClipboardExport, TimerRequest, Offline
 };
 
 const QString PushButtonText[BUTTON_NUM] = {
@@ -171,7 +171,7 @@ const int ModeArea[ROW_NUM] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0
 const int DefaultFace[ROW_NUM] = {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0};
 const int CardWidth[ROW_NUM] = {76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 245, 245, 95, 76, 76, 76, 76, 253};
 const int ArgOne[ROW_NUM] = {76, 76, 745, 640, 640, 640, 640, 640, 640, 745, 76, 76, 84, 84, 17, 758, 845, 845, 845,
-                             800};
+                             1500};
 const int ArgTwo[ROW_NUM] = {0, 0, 9, 10, 10, 10, 10, 10, 10, 9, 0, 0, 800, 800, 800, 9, 10, 10, 10, 31};
 const int PosX[ROW_NUM] = {1330, 1430, 439, 477, 477, 477, 477, 477, 477, 439, 1430, 1330, 333, 333, 418, 418, 373, 373,
                            373, 51};

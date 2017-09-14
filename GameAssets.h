@@ -46,10 +46,6 @@ public:
 
     void resetRandomSeed();//flush the random seed
 
-    bool isRoundStart() const;
-
-    void setRoundStart(bool start);
-
     int getPreviousWinner() const;
 
     void setPreviousWinner(int previousWinner);
@@ -104,9 +100,6 @@ public:
     void addCurrentRound();
 
     void clearAllGameRows();
-
-    void loadPlayerDeck(const QList<QString> &zeroNameList,
-                        const QList<QString> &oneNameList);
 
     void createCardsRandomlyOnNameListToRow(QList<QString> namelist, int row);
 
@@ -164,9 +157,20 @@ public:
 
     int getDeckBuilderTargetRow(CardInfo *card);
 
+    CardInfo *getLeaderInfo() const;
+
+    void setLeaderInfo(CardInfo *leaderInfo);
+
+    void loadPlayerFromDeck(int player, Deck &deck);
+
+    int getWinner();//call this after game ends
+    int getRoundStatus() const;
+
+    void setRoundStatus(int roundStatus);
+
 private:
     //some psedu-local variable for game looping
-    bool roundStart;
+    int roundStatus;
     int previousWinner;
     int currentPlayer;
     int currentRound;
@@ -183,6 +187,7 @@ private:
     QList<Deck> decks;
     unsigned randomSeed;
     QString leaderName;
+    CardInfo *leaderInfo;
 };
 
 

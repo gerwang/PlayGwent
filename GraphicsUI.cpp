@@ -63,9 +63,9 @@ const QPointF GraphicsUI::LabelPos[LABEL_NUM] = {
 
 GraphicsUI::GraphicsUI() {
     view.setScene(this);
-    view.setSceneRect(0, -900, 1600, 900);
+    view.setSceneRect(QRectF(SceneOriginPoint[MainMenuScene], QSizeF(1600, 900)));
     view.show();
-    currentScene = GameScene;//TODO toggle test code
+    currentScene = MainMenuScene;
 
     background[0] = QPixmap("assets/background/mainmenu.png");
     background[1] = QPixmap("assets/background/game.png");
@@ -79,7 +79,6 @@ GraphicsUI::GraphicsUI() {
         textItem[i].setFont(QFont("Arial", 16, 80, false));
         textItem[i].setPos(LabelPos[i]);
         textItem[i].setDefaultTextColor(QColor(201, 199, 197));
-        textItem[i].setPlainText("0");
         addItem(&textItem[i]);
     }
     for (int row = Player1_Siege; row <= Player0_Siege; row++) {
@@ -103,7 +102,7 @@ GraphicsUI::GraphicsUI() {
         pushButton[i].setText(ButtonText[i]);
         buttonProxy[i] = addWidget(&pushButton[i]);
         buttonProxy[i]->setPos(ButtonPos[i]);
-        pushButton[i].setVisible(true);//TODO resume it
+        pushButton[i].setVisible(false);
     }
 
     lineEdit.setFont(QFont("Arial", 16, 80, false));
@@ -131,6 +130,7 @@ GraphicsUI::GraphicsUI() {
         cardArrays[row].setPos(origin + QPointF(PosX[row], PosY[row]));
     }
     cardArrays[Player_Candidate].setRenderInfo(true);
+    cardArrays[Main_Menu].setRenderInfo(true);
 
     coinWidget = new CardWidget;
     coinWidget->setFront(QPixmap("assets/ui/timer-icon_player.tex.png"));
@@ -146,16 +146,7 @@ GraphicsUI::GraphicsUI() {
     sourceGhost = nullptr;
 
     resetValidRows();
-
-    for (int i = 0; i < 20; i++) {
-        cardArrays[qrand() % 12].spawnCardAt(0, CardInfo::createByName("Geralt_Igni"), false);
-    }
-    setSource(6, 0);
-    setValidPositions({{4, 0},
-                       {5, 0},
-                       {5, 1}});
     setLocalPlayer(0);
-    setPlayerInputState(0, MustValidTarget);
 }
 
 void GraphicsUI::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
@@ -168,6 +159,9 @@ void GraphicsUI::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
             if (inputState == AbstractUI::RejectAll) {
 
                 if (name == "CardWidget") {
+                    if (widget == coinWidget) {
+                        continue;
+                    }
                     handled = true;
                     auto cardwidget = dynamic_cast<CardWidget *>(widget);
                     if (focusWidget != cardwidget) {
@@ -189,14 +183,14 @@ void GraphicsUI::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
                                 if (sourceGhost != nullptr) {
                                     sourceGhost->setPos(
                                             arraywidget->mapToScene(
-                                                    arraywidget->makeSpaceForCardAt(coordinate.y(), true)));
+                                                    arraywidget->makeSpaceForCardAt(coordinate.y(), animationFlag)));
                                 }
                             } else {
-                                cardArrays[ghostCoordinate.x()].makeSpaceForCardAt(-1, true);
+                                cardArrays[ghostCoordinate.x()].makeSpaceForCardAt(-1, animationFlag);
                                 if (sourceGhost != nullptr) {
                                     QPropertyAnimation *animation = new QPropertyAnimation(sourceGhost, "pos");
                                     animation->setEndValue(arraywidget->mapToScene(
-                                            arraywidget->makeSpaceForCardAt(coordinate.y(), true)));
+                                            arraywidget->makeSpaceForCardAt(coordinate.y(), animationFlag)));
                                     animation->setDuration(CardArrayMakePlaceDuration);
                                     animation->start(QPropertyAnimation::DeleteWhenStopped);
                                 }
@@ -244,7 +238,7 @@ void GraphicsUI::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
             }
         } else if (inputState == AbstractUI::MustValidRow) {
             if (ghostCoordinate != QPoint(-1, -1)) {
-                cardArrays[ghostCoordinate.x()].makeSpaceForCardAt(-1, true);
+                cardArrays[ghostCoordinate.x()].makeSpaceForCardAt(-1, animationFlag);
                 ghostCoordinate = QPoint(-1, -1);
                 removeItem(sourceGhost);
             }
@@ -335,13 +329,15 @@ void GraphicsUI::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 
     }
     if (handled) {
-        for (auto target:listeners) {
+        for (auto target:outputBuffers) {
             target->writeUserOutput(command, row, column);
         }
     }
 }
 
 void GraphicsUI::drawBackground(QPainter *painter, const QRectF &rect) {
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setRenderHint(QPainter::SmoothPixmapTransform);
     for (int i = 0; i < 4; i++) {
         painter->drawPixmap(SceneOriginPoint[i], background[i]);
     }
@@ -355,6 +351,7 @@ void GraphicsUI::switchToScene(AbstractUI::Scene scene) {
     connect(&animation, &QPropertyAnimation::finished, &loop, &QEventLoop::quit);
     animation.start();
     loop.exec();
+    currentScene = scene;
 }
 
 void GraphicsUI::setButtonEnabled(int button, bool enabled) {
@@ -370,9 +367,7 @@ int GraphicsUI::getLocalPlayer() {
 }
 
 void GraphicsUI::playRandomCoinAnimation() {
-    for (int i = 0; i < 3; i++) {
-        coinWidget->flip();
-    }
+    coinWidget->flip();
 }
 
 void GraphicsUI::execMessageBox(const QString &title, const QString &message, int duration) {
@@ -395,7 +390,13 @@ void GraphicsUI::setWholeRowValidPositions(int row) {
 }
 
 void GraphicsUI::setLocalPlayer(int player) {
-    localPlayer = player;//TODO toggle IO device
+    if ((localPlayer != player) && (localPlayer == 1 || player == 1)) {//opponent, change game pos
+        swapGameFacePos();
+    }
+    if ((localPlayer != player) && (localPlayer == -1 || player == -1)) {
+        changePlayerOneVisible();
+    }
+    localPlayer = player;
 }
 
 void GraphicsUI::setCurrentPlayer(int player) {
@@ -417,15 +418,13 @@ void GraphicsUI::setRowWeather(int row, Weather weatherType) {
 
 
 void GraphicsUI::getUserInput(Command &clicktype, int &row, int &column, int player) {
-    QEventLoop loop;
-    loop.exec();
-    //TODO
+    inputBuffer[player]->getUserInput(clicktype, row, column);
 }
 
 void GraphicsUI::moveCard(int fromR, int fromC, int toR, int toC) {//write a bloking function
     auto mover = cardArrays[fromR].getCards().at(fromC);
-    cardArrays[fromR].removeCardAt(fromC, true);
-    cardArrays[toR].addCardAt(mover, toC, true, true);//blocking
+    cardArrays[fromR].removeCardAt(fromC, animationFlag);
+    cardArrays[toR].addCardAt(mover, toC, animationFlag, true);//blocking
 }
 
 void GraphicsUI::setLabelText(int index, QString text) {
@@ -469,6 +468,9 @@ void GraphicsUI::releaseSource() {
         source = nullptr;
     }
     if (sourceGhost != nullptr) {
+        if (source->scene() == this) {
+            removeItem(sourceGhost);
+        }
         sourceGhost->deleteLater();
         sourceGhost = nullptr;
     }
@@ -497,15 +499,7 @@ void GraphicsUI::setLineEditText(const QString &text) {
 
 void GraphicsUI::loadCardFromAssets(GameAssets *assets) {//no one wants the function to block
     for (int row = 0; row < ROW_NUM; row++) {
-        cardArrays[row].performSetWeather(assets->getRowWeather(row));
-        while (!cardArrays[row].getCards().empty()) {
-            validateBeforeErase(cardArrays[row][0]);
-            cardArrays[row].eraseCardFromGameAt(0);
-        }
-        const QList<CardInfo *> &array = assets->getCardArray(row);
-        for (int column = 0; column < array.size(); column++) {
-            cardArrays[row].spawnCardAt(column, array[column], false);
-        }
+        loadARowFromAssets(row, assets);
     }
 }
 
@@ -564,7 +558,7 @@ void GraphicsUI::showFlyingEllipseFromSrcToDests(const QColor &color, QPoint src
     connect(group, &QParallelAnimationGroup::finished, &loop, &QEventLoop::quit);
     group->start();
     loop.exec();
-    group->deleteLater();
+    delete group;
 }
 
 void GraphicsUI::showUpwardingRectangles(const QColor &color, const QList<QPoint> &dests) {
@@ -603,23 +597,11 @@ void GraphicsUI::showUpwardingRectangles(const QColor &color, const QList<QPoint
 }
 
 void GraphicsUI::spawnNewCard(CardInfo *card, int row, int column) {
-    cardArrays[row].spawnCardAt(column, card, true);
-}
-
-bool GraphicsUI::isNeedRelay() const {
-    return needRelay;
-}
-
-void GraphicsUI::setNeedRelay(bool needRelay) {
-    GraphicsUI::needRelay = needRelay;
-}
-
-NetworkManager &GraphicsUI::getNetworkManager() {
-    return networkManager;
+    cardArrays[row].spawnCardAt(column, card, animationFlag);
 }
 
 void GraphicsUI::createSpiritWidget(CardWidget *fromWidget) {
-    static const QPointF SpiritPosition[4] = {QPointF(-1, -1), QPointF(1313, 178), QPointF(1309, 120), QPointF(-1, -1)};
+    static const QPoint SpiritPosition[4] = {QPoint(-1, -1), QPoint(1313, 178), QPoint(1309, 120), QPoint(-1, -1)};
     if (spiritWidget != nullptr) {
         spiritWidget->spiritExitScene();
         spiritWidget = nullptr;
@@ -698,5 +680,80 @@ void GraphicsUI::validateBeforeErase(CardWidget *cardwidget) {
     if (source == cardwidget) {
         source = nullptr;
     }
+}
+
+void GraphicsUI::swapGameFacePos() {
+    for (int row = Player1_Graveyard; row <= Player1_Melee; row++) {
+        int enemyRow = Player0_Graveyard - row;
+        auto tempPos = cardArrays[row].pos();
+        cardArrays[row].setPos(cardArrays[enemyRow].pos());
+        cardArrays[enemyRow].setPos(tempPos);
+
+        auto tempFace = cardArrays[row].getDefaultFace();
+        cardArrays[row].setDefaultFace(cardArrays[enemyRow].getDefaultFace());
+        cardArrays[enemyRow].setDefaultFace(tempFace);
+
+        auto tempLabelPos = textItem[row].pos();
+        textItem[row].setPos(textItem[enemyRow].pos());
+        textItem[enemyRow].setPos(tempLabelPos);
+    }
+
+    auto combatvaluePos = textItem[Player0_CombatValue].pos();
+    textItem[Player0_CombatValue].setPos(textItem[Player1_CombatValue].pos());
+    textItem[Player1_CombatValue].setPos(combatvaluePos);
+
+    auto tempNamePos = textItem[Player0_Name].pos();
+    textItem[Player0_Name].setPos(textItem[Player1_Name].pos());
+    textItem[Player1_Name].setPos(tempNamePos);
+}
+
+void GraphicsUI::setPlayerInputBuffer(int player, AbstractInputBuffer *input) {
+    inputBuffer[player] = input;
+}
+
+QList<AbstractOutputBuffer *> &GraphicsUI::getOutputBuffers() {
+    return outputBuffers;
+}
+
+void GraphicsUI::loadARowFromAssets(int row, GameAssets *assets) {
+    cardArrays[row].performSetWeather(assets->getRowWeather(row));
+    while (!cardArrays[row].getCards().empty()) {
+        validateBeforeErase(cardArrays[row][0]);
+        cardArrays[row].eraseCardFromGameAt(0);
+    }
+    const QList<CardInfo *> &array = assets->getCardArray(row);
+    for (int column = 0; column < array.size(); column++) {
+        cardArrays[row].spawnCardAt(column, array[column], false);
+    }
+}
+
+void GraphicsUI::setLeader(CardInfo *leaderInfo) {
+    leaderWidget = new CardWidget(leaderInfo);
+    leaderWidget->setWidth(95);
+    addItem(leaderWidget);
+    leaderWidget->setPos(SceneOriginPoint[DeckBuilderScene] + LeaderPosition);
+}
+
+void GraphicsUI::clearLeader() {
+    removeItem(leaderWidget);
+    leaderWidget->deleteLater();
+    leaderWidget = nullptr;
+}
+
+CardArrayWidget *GraphicsUI::getRowCardArrayWidget(int row) {
+    return &cardArrays[row];
+}
+
+bool GraphicsUI::isAnimationFlag() const {
+    return animationFlag;
+}
+
+void GraphicsUI::setAnimationFlag(bool animationFlag) {
+    GraphicsUI::animationFlag = animationFlag;
+}
+
+void GraphicsUI::changePlayerOneVisible() {
+    int facemode = cardArrays[Player1_Hand].getDefaultFace();
+    cardArrays[Player1_Hand].setDefaultFace(facemode ^ 1);
 }
 

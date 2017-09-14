@@ -10,6 +10,7 @@
 #include <QTimeLine>
 #include <QGraphicsSceneWheelEvent>
 #include <QDebug>
+#include <QGraphicsScene>
 
 const QColor CardArrayWidget::weatherColor[4] = {
         QColor(0, 0, 0, 0),//sunny
@@ -223,6 +224,8 @@ void CardArrayWidget::setMode(CardArrayWidget::LayoutMode mode) {
 
 void CardArrayWidget::addCardAt(CardWidget *card, int index, bool enableAnimation, bool blocking) {
     //now the card is in the scene coordinate
+    card->setParentItem(this);
+    card->setPos(mapFromScene(card->pos()));
     performAddCard(card, index);
     makeSpaceForCardAt(-1, enableAnimation, blocking);
     applyFaceToCard(card, enableAnimation);
@@ -230,13 +233,17 @@ void CardArrayWidget::addCardAt(CardWidget *card, int index, bool enableAnimatio
 
 void CardArrayWidget::removeCardAt(int index, bool enableAnimation) {
     CardWidget *card = cards.takeAt(index);
-    card->setPos(mapToScene(card->pos()));
+    card->setPos(card->mapToScene(card->mapFromParent(card->pos())));
     card->setParentItem(nullptr);
     makeSpaceForCardAt(-1, enableAnimation);
 }
 
 void CardArrayWidget::eraseCardFromGameAt(int index) {
     CardWidget *widget = cards.takeAt(index);
+    widget->setParentItem(nullptr);
+    if (widget->scene() == scene()) {
+        scene()->removeItem(widget);
+    }
     widget->deleteLater();
     makeSpaceForCardAt(-1, false);
 }
@@ -283,7 +290,6 @@ void CardArrayWidget::wheelEvent(QGraphicsSceneWheelEvent *event) {
 
 void CardArrayWidget::performAddCard(CardWidget *card, int index) {
     card->setWidth(cardWidth);
-    card->setParentItem(this);
     if (renderInfo) {
         card->setRenderFlag(card->getRenderFlag() | CardWidget::DrawInfo);
     } else {
