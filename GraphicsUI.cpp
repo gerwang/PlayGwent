@@ -65,6 +65,7 @@ GraphicsUI::GraphicsUI() {
     view.setScene(this);
     view.setSceneRect(0, -900, 1600, 900);
     view.show();
+    currentScene = GameScene;//TODO toggle test code
 
     background[0] = QPixmap("assets/background/mainmenu.png");
     background[1] = QPixmap("assets/background/game.png");
@@ -72,9 +73,7 @@ GraphicsUI::GraphicsUI() {
     background[3] = QPixmap("assets/background/mainmenu.png");
 
     focusWidget = nullptr;
-    spritWidget = nullptr;
-
-    memset(rowValidation, 0, sizeof(rowValidation));
+    spiritWidget = nullptr;
 
     for (int i = 0; i < LABEL_NUM; i++) {
         textItem[i].setFont(QFont("Arial", 16, 80, false));
@@ -104,7 +103,7 @@ GraphicsUI::GraphicsUI() {
         pushButton[i].setText(ButtonText[i]);
         buttonProxy[i] = addWidget(&pushButton[i]);
         buttonProxy[i]->setPos(ButtonPos[i]);
-        pushButton[i].setVisible(false);
+        pushButton[i].setVisible(true);//TODO resume it
     }
 
     lineEdit.setFont(QFont("Arial", 16, 80, false));
@@ -141,15 +140,205 @@ GraphicsUI::GraphicsUI() {
     coinWidget->setWidth(110);
     addItem(coinWidget);
 
-    seletionLine.setPen(QPen(QColor(0, 0, 255, 128), 30, Qt::DashDotDotLine, Qt::RoundCap));
+    selectionLine.setPen(QPen(QColor(0, 0, 255, 128), 30, Qt::DashDotDotLine, Qt::RoundCap));
+
+    ghostCoordinate = QPoint(-1, -1);
+    sourceGhost = nullptr;
+
+    resetValidRows();
+
+    for (int i = 0; i < 20; i++) {
+        cardArrays[qrand() % 12].spawnCardAt(0, CardInfo::createByName("Geralt_Igni"), false);
+    }
+    setSource(6, 0);
+    setValidPositions({{4, 0},
+                       {5, 0},
+                       {5, 1}});
+    setLocalPlayer(0);
+    setPlayerInputState(0, MustValidTarget);
 }
 
 void GraphicsUI::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
+    const QList<QGraphicsItem *> &itemList = items(mouseEvent->scenePos());
+    bool handled = false;
+    for (const auto &item:itemList) {
+        auto widget = dynamic_cast<QGraphicsWidget *>(item);
+        if (widget != nullptr) {
+            QString name = widget->metaObject()->className();
+            if (inputState == AbstractUI::RejectAll) {
 
+                if (name == "CardWidget") {
+                    handled = true;
+                    auto cardwidget = dynamic_cast<CardWidget *>(widget);
+                    if (focusWidget != cardwidget) {
+                        setFocusWidget(cardwidget);
+                    }
+                    break;
+                }
+
+            } else if (inputState == AbstractUI::MustValidRow) {
+
+                if (name == "CardArrayWidget") {
+                    auto arraywidget = dynamic_cast<CardArrayWidget *>(widget);
+                    if (arraywidget->isClickValid()) {
+                        handled = true;
+                        QPoint coordinate = locateMousePosition(arraywidget, mouseEvent->scenePos());
+                        if (ghostCoordinate != coordinate) {
+                            if (ghostCoordinate == QPoint(-1, -1)) {
+                                addItem(sourceGhost);
+                                if (sourceGhost != nullptr) {
+                                    sourceGhost->setPos(
+                                            arraywidget->mapToScene(
+                                                    arraywidget->makeSpaceForCardAt(coordinate.y(), true)));
+                                }
+                            } else {
+                                cardArrays[ghostCoordinate.x()].makeSpaceForCardAt(-1, true);
+                                if (sourceGhost != nullptr) {
+                                    QPropertyAnimation *animation = new QPropertyAnimation(sourceGhost, "pos");
+                                    animation->setEndValue(arraywidget->mapToScene(
+                                            arraywidget->makeSpaceForCardAt(coordinate.y(), true)));
+                                    animation->setDuration(CardArrayMakePlaceDuration);
+                                    animation->start(QPropertyAnimation::DeleteWhenStopped);
+                                }
+                            }
+                            ghostCoordinate = coordinate;
+                        }
+                        break;
+                    }
+                }
+
+            } else if (inputState == AbstractUI::MustValidTarget) {
+
+                if (name == "CardWidget") {
+                    auto cardwidget = dynamic_cast<CardWidget *>(widget);
+                    if (cardwidget->isValidTarget()) {
+                        handled = true;
+                        if (focusWidget != cardwidget) {
+                            setFocusWidget(cardwidget);
+                        }
+
+                        if (source != nullptr) {
+                            selectionLine.setLine(
+                                    QLineF(source->mapToScene(source->mapFromParent(source->geometry().center())),
+                                           cardwidget->mapToScene(
+                                                   cardwidget->mapFromParent(cardwidget->geometry().center()))));
+                        }
+                        break;
+                    }
+                }
+
+            }
+        }
+    }
+    if (!handled) {
+        if (inputState == AbstractUI::RejectAll) {
+            releaseFocusWidget();
+            createSpiritWidget(nullptr);
+        } else if (inputState == AbstractUI::MustValidTarget) {
+            releaseFocusWidget();
+            createSpiritWidget(nullptr);
+            if (source != nullptr) {
+                selectionLine.setLine(
+                        QLineF(source->mapToScene(source->mapFromParent(source->geometry().center())),
+                               mouseEvent->scenePos()));
+            }
+        } else if (inputState == AbstractUI::MustValidRow) {
+            if (ghostCoordinate != QPoint(-1, -1)) {
+                cardArrays[ghostCoordinate.x()].makeSpaceForCardAt(-1, true);
+                ghostCoordinate = QPoint(-1, -1);
+                removeItem(sourceGhost);
+            }
+        }
+    }
 }
 
 void GraphicsUI::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
+    if (inputState == AbstractUI::RejectAll) {
+        return;
+    }
 
+
+    const QList<QGraphicsItem *> &itemList = items(mouseEvent->scenePos());
+    Command command;
+    int row = -1, column = -1;
+    bool handled = false;
+    if (mouseEvent->button() == Qt::RightButton) {
+        command = Command::RightClick;
+        handled = true;
+    } else {
+        for (const auto &item:itemList) {
+            auto widget = dynamic_cast<QGraphicsWidget *>(item);
+            if (widget != nullptr) {
+                QString name = widget->metaObject()->className();
+
+                if (name == "QGraphicsProxyWidget") {
+                    if (widget == buttonProxy[PushButtonEnum::ESCAPE]) {
+                        command = Command::EscapeChoose;
+                        handled = true;
+                        break;
+                    } else if (widget == buttonProxy[PushButtonEnum::BUTTON_PASS]) {
+                        command = Command::Pass;
+                        handled = true;
+                        break;
+                    } else if (widget == buttonProxy[PushButtonEnum::SAVEDECK]) {
+                        command = Command::SaveDeck;
+                        handled = true;
+                        break;
+                    } else if (widget == buttonProxy[PushButtonEnum::CLIPBOARD_IMPORT]) {
+                        command = Command::ClipboardImport;
+                        handled = true;
+                        break;
+                    } else if (widget == buttonProxy[PushButtonEnum::CLIPBOARD_EXPORT]) {
+                        command = Command::ClipboardExport;
+                        handled = true;
+                        break;
+                    }
+                } else {
+
+                    if (inputState == AbstractUI::MustValidTarget) {
+                        if (name == "CardWidget") {
+                            auto cardwidget = dynamic_cast<CardWidget *>(widget);
+                            if (cardwidget->isValidTarget()) {
+
+                                command = Command::LeftClick;
+                                for (int i = 0; i < ROW_NUM; i++) {
+                                    for (int j = 0; j < cardArrays[i].getCards().size(); j++) {
+                                        if (cardArrays[i][j] == cardwidget) {
+                                            row = i;
+                                            column = j;
+                                            break;
+                                        }
+                                    }
+                                }
+                                handled = true;
+                                break;
+
+                            }
+                        }
+                    }
+
+                }
+
+            }
+        }
+
+
+        if (inputState == AbstractUI::MustValidRow) {
+            if (ghostCoordinate != QPoint(-1, -1)) {
+                command = Command::LeftClick;
+                row = ghostCoordinate.x();
+                column = ghostCoordinate.y();
+                handled = true;
+            }
+        }
+
+
+    }
+    if (handled) {
+        for (auto target:listeners) {
+            target->writeUserOutput(command, row, column);
+        }
+    }
 }
 
 void GraphicsUI::drawBackground(QPainter *painter, const QRectF &rect) {
@@ -234,10 +423,9 @@ void GraphicsUI::getUserInput(Command &clicktype, int &row, int &column, int pla
 }
 
 void GraphicsUI::moveCard(int fromR, int fromC, int toR, int toC) {//write a bloking function
-    //TODO check if a non-bloking one is needed
     auto mover = cardArrays[fromR].getCards().at(fromC);
     cardArrays[fromR].removeCardAt(fromC, true);
-    cardArrays[toR].addCardAt(mover, toC, true);
+    cardArrays[toR].addCardAt(mover, toC, true, true);//blocking
 }
 
 void GraphicsUI::setLabelText(int index, QString text) {
@@ -269,14 +457,20 @@ void GraphicsUI::setValidRow(int row) {
 }
 
 void GraphicsUI::setPlayerInputState(int player, AbstractUI::InputState state) {
-    //TODO
+    if (player == localPlayer) {
+        inputState = state;
+    }
 }
 
 void GraphicsUI::releaseSource() {
     if (source != nullptr) {
         source->shrink();
-        removeItem(&seletionLine);
+        removeItem(&selectionLine);
         source = nullptr;
+    }
+    if (sourceGhost != nullptr) {
+        sourceGhost->deleteLater();
+        sourceGhost = nullptr;
     }
 }
 
@@ -286,8 +480,11 @@ void GraphicsUI::setSource(int row, int column) {
     }
     source = cardArrays[row].getCards().at(column);
     source->expand();
-    seletionLine.setLine(QLineF(source->geometry().center(), source->geometry().center()));
-    addItem(&seletionLine);
+    selectionLine.setLine(QLineF(source->geometry().center(), source->geometry().center()));
+    addItem(&selectionLine);
+    sourceGhost = new CardWidget(source->getCardinfo());
+    sourceGhost->setWidth(source->size().width());
+    sourceGhost->setRenderFlag(sourceGhost->getRenderFlag() | CardWidget::DrawTransparent);
 }
 
 QString GraphicsUI::getLineEditText() {
@@ -302,6 +499,7 @@ void GraphicsUI::loadCardFromAssets(GameAssets *assets) {//no one wants the func
     for (int row = 0; row < ROW_NUM; row++) {
         cardArrays[row].performSetWeather(assets->getRowWeather(row));
         while (!cardArrays[row].getCards().empty()) {
+            validateBeforeErase(cardArrays[row][0]);
             cardArrays[row].eraseCardFromGameAt(0);
         }
         const QList<CardInfo *> &array = assets->getCardArray(row);
@@ -312,6 +510,7 @@ void GraphicsUI::loadCardFromAssets(GameAssets *assets) {//no one wants the func
 }
 
 void GraphicsUI::removeCardFromGame(int row, int column) {
+    validateBeforeErase(cardArrays[row][column]);
     cardArrays[row].eraseCardFromGameAt(column);
 }
 
@@ -405,5 +604,99 @@ void GraphicsUI::showUpwardingRectangles(const QColor &color, const QList<QPoint
 
 void GraphicsUI::spawnNewCard(CardInfo *card, int row, int column) {
     cardArrays[row].spawnCardAt(column, card, true);
+}
+
+bool GraphicsUI::isNeedRelay() const {
+    return needRelay;
+}
+
+void GraphicsUI::setNeedRelay(bool needRelay) {
+    GraphicsUI::needRelay = needRelay;
+}
+
+NetworkManager &GraphicsUI::getNetworkManager() {
+    return networkManager;
+}
+
+void GraphicsUI::createSpiritWidget(CardWidget *fromWidget) {
+    static const QPointF SpiritPosition[4] = {QPointF(-1, -1), QPointF(1313, 178), QPointF(1309, 120), QPointF(-1, -1)};
+    if (spiritWidget != nullptr) {
+        spiritWidget->spiritExitScene();
+        spiritWidget = nullptr;
+    }
+    if (fromWidget != nullptr) {
+        if (SpiritPosition[currentScene] != QPoint(-1, -1)) {
+            spiritWidget = new CardWidget(fromWidget->getCardinfo());
+            spiritWidget->setRenderFlag(fromWidget->getRenderFlag() | CardWidget::DrawInfo);
+            spiritWidget->setFace(fromWidget->getFace());
+            addItem(spiritWidget);
+            spiritWidget->setPos(SceneOriginPoint[currentScene] + SpiritPosition[currentScene]);
+            spiritWidget->spiritEnterScene();
+        }
+    }
+}
+
+void GraphicsUI::releaseFocusWidget() {
+    if (focusWidget != nullptr) {
+        focusWidget->shrink();
+        focusWidget->setZValue(focusPrevZValue);
+        focusWidget = nullptr;
+    }
+}
+
+QPoint
+GraphicsUI::locateMousePosition(CardArrayWidget *arraywidget, const QPointF &mousePos) {
+    int row = -1, column = -1;
+    for (int index = 0; index < ROW_NUM; index++) {
+        if (arraywidget == &cardArrays[index]) {
+            row = index;
+            break;
+        }
+    }
+    if (row != -1) {
+        column = 0;
+        for (auto &cardwidget:arraywidget->getCards()) {
+            QPointF centerPos = cardwidget->mapToScene(cardwidget->mapFromParent(cardwidget->geometry().center()));
+            if (mousePos.x() > centerPos.x()) {
+                column++;
+            } else {
+                break;
+            }
+        }
+    }
+    return {row, column};
+}
+
+void GraphicsUI::setFocusWidget(CardWidget *cardwidget) {
+    releaseFocusWidget();
+    focusWidget = cardwidget;
+    focusPrevZValue = focusWidget->zValue();
+    focusWidget->setZValue(100);
+    focusWidget->expand();
+    createSpiritWidget(cardwidget);
+}
+
+void GraphicsUI::validateBeforeErase(CardWidget *cardwidget) {
+    if (cardwidget == nullptr) {
+        return;
+    }
+    if (sourceGhost != nullptr && sourceGhost->getCardinfo() == cardwidget->getCardinfo()) {
+        releaseSource();
+    }
+    if (spiritWidget != nullptr && spiritWidget->getCardinfo() == cardwidget->getCardinfo()) {
+        createSpiritWidget(nullptr);
+    }
+    if (focusWidget == cardwidget) {
+        focusWidget = nullptr;
+    }
+    if (spiritWidget == cardwidget) {
+        spiritWidget = nullptr;
+    }
+    if (sourceGhost == cardwidget) {
+        sourceGhost = nullptr;
+    }
+    if (source == cardwidget) {
+        source = nullptr;
+    }
 }
 

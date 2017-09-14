@@ -57,10 +57,11 @@ int main(int argc, char *argv[]) {
     GameController::controller()->getGameUI()->setLocalPlayer(0);
     GameController::controller()->startGame();
      */
-    GameController::controller()->setAssets(new GameAssets);
-    GameController::controller()->setGameUI(new GraphicsUI);
-    GameController::controller()->startDeckBuilder();
+//    GameController::controller()->setAssets(new GameAssets);
+//    GameController::controller()->setGameUI(new GraphicsUI);
+//    GameController::controller()->startDeckBuilder();
 //    LoginDialog dialog;
 //    qDebug() << dialog.exec();
+    GraphicsUI ui;
     return a.exec();
 }

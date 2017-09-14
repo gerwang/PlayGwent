@@ -61,6 +61,11 @@ void CardWidget::paintFront(QPainter *truePainter, const QStyleOptionGraphicsIte
     static QPixmap pixmap(400, 850);
     pixmap.fill(Qt::transparent);
     auto *painter = new QPainter(&pixmap);
+
+    if (renderFlag & DrawTransparent) {
+        painter->setOpacity(0.5);
+    }
+
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setRenderHint(QPainter::SmoothPixmapTransform);
     qreal hTrans = pixmap.width() - front.width() - 10;
@@ -68,7 +73,7 @@ void CardWidget::paintFront(QPainter *truePainter, const QStyleOptionGraphicsIte
     painter->translate(hTrans, vTrans);
     painter->drawPixmap(0, 0, front);// draw front image
 
-    if (renderFlag & DrawFrame) {
+    if ((renderFlag & DrawFrame) && !cardinfo->hasAttribute("ui")) {
 
         painter->drawPixmap(front.width() - banner.width(), front.height() - banner.height(), banner);//draw frame
 
@@ -299,5 +304,9 @@ const QPixmap &CardWidget::getBack() const {
 
 void CardWidget::setBack(const QPixmap &back) {
     CardWidget::back = back;
+}
+
+CardInfo *CardWidget::getCardinfo() const {
+    return cardinfo;
 }
 

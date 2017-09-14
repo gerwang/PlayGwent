@@ -19,7 +19,8 @@ public:
 
     enum Flags {
         DrawFrame = 1,
-        DrawInfo = 2
+        DrawInfo = 2,
+        DrawTransparent = 4
     };
 
     const QPixmap &getPixmap(const QString &path);
@@ -72,10 +73,11 @@ public:
 
     void setBack(const QPixmap &back);
 
-    QPropertyAnimation *showSelfBoost();
+    CardInfo *getCardinfo() const;
 
 private:
-    CardInfo *cardinfo{};// the date structure stores the card infomation
+    CardInfo *cardinfo{};
+// the date structure stores the card infomation
     QPixmap banner; // the pixmap store the frame
     QPixmap front;
     // store picture of characters

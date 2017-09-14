@@ -32,16 +32,10 @@ void CardArrayWidget::spawnCardAt(int index, CardInfo *info, bool enableAnimatio
     widget->setParentItem(this);
     widget->setPos(pos);
     performAddCard(widget, index);
-    if (defaultFace != widget->getFace()) {
-        if (enableAnimation) {
-            widget->flip();
-        } else {
-            widget->setFace(defaultFace);
-        }
-    }
+    applyFaceToCard(widget, enableAnimation);
 }
 
-QPointF CardArrayWidget::makeSpaceForCardAt(int index, bool enableAnimation) {
+QPointF CardArrayWidget::makeSpaceForCardAt(int index, bool enableAnimation, bool blocking) {
     int cardSize = cards.size();
     if (index != -1) {
         cardSize++;
@@ -89,7 +83,14 @@ QPointF CardArrayWidget::makeSpaceForCardAt(int index, bool enableAnimation) {
                     group->addAnimation(animation);
                 }
             }
-            group->start(QParallelAnimationGroup::DeleteWhenStopped);
+            if (blocking) {
+                QEventLoop loop;
+                connect(group, &QParallelAnimationGroup::finished, &loop, &QEventLoop::quit);
+                group->start(QParallelAnimationGroup::DeleteWhenStopped);
+                loop.exec();
+            } else {
+                group->start(QParallelAnimationGroup::DeleteWhenStopped);
+            }
         } else {
             for (int newPos = 0; newPos < cardSize; newPos++) {
                 if (newPos == index) {
@@ -140,7 +141,16 @@ QPointF CardArrayWidget::makeSpaceForCardAt(int index, bool enableAnimation) {
                 currentPos += cardWidth + fixedSpacing;
             }
             resize(currentPos, cardWidth * 378 / 266);
-            group->start(QParallelAnimationGroup::DeleteWhenStopped);
+
+            if (blocking) {
+                QEventLoop loop;
+                connect(group, &QParallelAnimationGroup::finished, &loop, &QEventLoop::quit);
+                group->start(QParallelAnimationGroup::DeleteWhenStopped);
+                loop.exec();
+            } else {
+                group->start(QParallelAnimationGroup::DeleteWhenStopped);
+            }
+
         } else {
             int currentPos = 0;
             for (int newPos = 0; newPos < cardSize; newPos++) {
@@ -211,10 +221,11 @@ void CardArrayWidget::setMode(CardArrayWidget::LayoutMode mode) {
     CardArrayWidget::mode = mode;
 }
 
-void CardArrayWidget::addCardAt(CardWidget *card, int index, bool enableAnimation) {
+void CardArrayWidget::addCardAt(CardWidget *card, int index, bool enableAnimation, bool blocking) {
     //now the card is in the scene coordinate
     performAddCard(card, index);
-    makeSpaceForCardAt(-1, enableAnimation);
+    makeSpaceForCardAt(-1, enableAnimation, blocking);
+    applyFaceToCard(card, enableAnimation);
 }
 
 void CardArrayWidget::removeCardAt(int index, bool enableAnimation) {
@@ -301,6 +312,16 @@ void CardArrayWidget::performSetWeather(Weather nextWeather) {
 
 CardWidget *CardArrayWidget::operator[](int column) {
     return cards[column];
+}
+
+void CardArrayWidget::applyFaceToCard(CardWidget *card, bool enableAnimation) {
+    if (defaultFace != card->getFace()) {
+        if (enableAnimation) {
+            card->flip();
+        } else {
+            card->setFace(defaultFace);
+        }
+    }
 }
 
 

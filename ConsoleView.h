@@ -10,7 +10,7 @@
 #include "AbstractUI.h"
 #include "ConsoleWindow.h"
 #include "ui_consoleui.h"
-#include "AbstractIOBuffer.h"
+#include "AbstractInputBuffer.h"
 
 class ConsoleView : public QObject, public AbstractUI {
 
@@ -119,7 +119,7 @@ private:
     InputState playerInputState[2]{};// for each player
     ConsoleWindow *mainwindow{};
 
-    AbstractIOBuffer *inputBuffer[2]{};
+    AbstractInputBuffer *inputBuffer[2]{};
 
     QPoint source;
     QList<QPoint> targets;

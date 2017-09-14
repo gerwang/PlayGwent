@@ -5,9 +5,9 @@
 #ifndef PLAYGWENT_SCREENINPUTBUFFER_H
 #define PLAYGWENT_SCREENINPUTBUFFER_H
 
-#include "AbstractIOBuffer.h"
+#include "AbstractInputBuffer.h"
 
-class ScreenInputBuffer : public QObject, public AbstractIOBuffer {
+class ScreenInputBuffer : public QObject, public AbstractInputBuffer {
 Q_OBJECT
     //only input for logic will be here, input for look and feel can be reponded immediately
 

@@ -15,7 +15,7 @@ const double CardExpandAnimScale = 1.2;
 const int CardExpandAnimDuration = 100;
 const int CardFlipHalfDuration = 200;
 const int CardRotateCDDuration = 900;
-const int CardArrayMakePlaceDuration = 500;
+const int CardArrayMakePlaceDuration = 300;
 const int WeatherChangeDuration = 2000;
 const double MouseWheelSpeed = 0.9;
 const int SwitchSceneDuration = 800;
@@ -177,7 +177,6 @@ const int PosX[ROW_NUM] = {1330, 1430, 439, 477, 477, 477, 477, 477, 477, 439, 1
                            373, 51};
 const int PosY[ROW_NUM] = {14, 14, 14, 160, 250, 347, 471, 574, 671, 787, 787, 787, 272, 910, 663, 442, 324, 206, 100,
                            260};
-const QPointF SpiritPosition[4] = {QPointF(-1, -1), QPointF(1313, 178), QPointF(1309, 120), QPointF(-1, -1)};
 const QPointF LeaderPosition = QPointF(161, 630);
 
 #endif //PLAYGWENT_GAMECONSTANT_H_H

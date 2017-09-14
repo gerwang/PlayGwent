@@ -27,7 +27,7 @@ public:
 
     void eraseCardFromGameAt(int index);
 
-    QPointF makeSpaceForCardAt(int index, bool enableAnimation);//index=-1 if no room to make
+    QPointF makeSpaceForCardAt(int index, bool enableAnimation, bool blocking = false);//index=-1 if no room to make
 
     bool isClickValid() const;
 
@@ -41,7 +41,7 @@ public:
 
     void setDefaultFace(int defaultFace);
 
-    void addCardAt(CardWidget *card, int index, bool enableAnimation);
+    void addCardAt(CardWidget *card, int index, bool enableAnimation, bool blocking = false);
 
     void removeCardAt(int index, bool enableAnimation);//erase the card, map it properly  to scene
 
@@ -67,7 +67,10 @@ public:
 
     void performSetWeather(Weather nextWeather);
 
+    void applyFaceToCard(CardWidget *card, bool enableAnimation);
+
     CardWidget *operator[](int column);
+
 private:
     LayoutMode mode;
 

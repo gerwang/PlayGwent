@@ -5,12 +5,12 @@
 #ifndef PLAYGWENT_CONSOLEIOBUFFER_H
 #define PLAYGWENT_CONSOLEIOBUFFER_H
 
-#include "AbstractIOBuffer.h"
+#include "AbstractInputBuffer.h"
 #include <QObject>
 #include <QPushButton>
 #include <QLineEdit>
 
-class ConsoleIOBuffer : public QObject, public AbstractIOBuffer {
+class ConsoleIOBuffer : public QObject, public AbstractInputBuffer {
 Q_OBJECT
 public:
     ConsoleIOBuffer(QPushButton *button, QLineEdit *edit) : button(button), edit(edit) {}

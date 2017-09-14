@@ -8,9 +8,10 @@
 #include "ZoomGraphicsView.h"
 #include "NetworkManager.h"
 #include "AbstractUI.h"
-#include "AbstractIOBuffer.h"
+#include "AbstractInputBuffer.h"
 #include "CardWidget.h"
 #include "CardArrayWidget.h"
+#include "AbstractOutputBuffer.h"
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsProxyWidget>
@@ -38,18 +39,29 @@ public:
 
     void showUpwardingRectangles(const QColor &color, const QList<QPoint> &dests);
 
+    void createSpiritWidget(CardWidget *fromWidget);
+
+    void releaseFocusWidget();
+
+    void setFocusWidget(CardWidget *cardwidget);
+
+    QPoint locateMousePosition(CardArrayWidget *arrayWidget, const QPointF &mousePos);
+
 protected:
     void drawBackground(QPainter *painter, const QRectF &rect) override;
 
 private:
     ZoomGraphicsView view;
     NetworkManager networkManager;
+public:
+    NetworkManager &getNetworkManager();
+
+private:
     int localPlayer;
     int currentPlayer;
-    AbstractUI::InputState playerInputState[2];
+    AbstractUI::InputState inputState;
     AbstractUI::Scene currentScene;
-    AbstractIOBuffer *inputBuffer[2];
-    bool rowValidation[ROW_NUM];
+    QList<AbstractOutputBuffer *> listeners;
 
     QPushButton pushButton[BUTTON_NUM];
     QLineEdit lineEdit;
@@ -59,15 +71,27 @@ private:
     QGraphicsProxyWidget *lineEditProxy;
 
     QPixmap background[4];
-    CardWidget *focusWidget{};
-    CardWidget *spritWidget{};
     CardArrayWidget cardArrays[ROW_NUM];
 
+    CardWidget *focusWidget{};
+    CardWidget *spiritWidget{};
+    CardWidget *sourceGhost;
     CardWidget *coinWidget;
-
     CardWidget *source{};
 
-    QGraphicsLineItem seletionLine;
+    QGraphicsLineItem selectionLine;
+
+    qreal focusPrevZValue{};
+    QPoint ghostCoordinate{-1, -1};
+
+    bool needRelay{};
+public:
+    bool isNeedRelay() const;
+
+    void setNeedRelay(bool needRelay);
+
+    void validateBeforeErase(CardWidget *cardwidget);
+
 public:
     void setLineEditText(const QString &text) override;
 
