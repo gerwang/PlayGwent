@@ -27,6 +27,11 @@ void Lacerate::slotOnHandSeleted(CardInfo *seletedCard, bool allowCancel) {
             gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
             gameUI->resetValidRows();
 
+            if (command == Command::Offline) {
+                command = Command::RightClick;
+                allowCancel = true;
+            }
+
             if (command == Command::RightClick) {
                 //user try to cancel
                 if (allowCancel) {//allow cancel,user will choose another card

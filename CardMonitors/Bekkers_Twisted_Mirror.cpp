@@ -27,6 +27,11 @@ void Bekkers_Twisted_Mirror::slotOnHandSeleted(CardInfo *seletedCard, bool allow
             gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
             gameUI->resetValidRows();
 
+            if (command == Command::Offline) {
+                allowCancel = true;
+                command = Command::RightClick;
+            }
+
             if (command == Command::RightClick) {
                 //user try to cancel
                 if (allowCancel) {//allow cancel,user will choose another card

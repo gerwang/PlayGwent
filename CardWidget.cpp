@@ -310,3 +310,19 @@ CardInfo *CardWidget::getCardinfo() const {
     return cardinfo;
 }
 
+bool CardWidget::isAnimated() const {
+    return animated;
+}
+
+void CardWidget::setAnimated(bool animated) {
+    CardWidget::animated = animated;
+}
+
+void CardWidget::unlockAnimated() {
+    animated = false;
+}
+
+void CardWidget::lockAnimated() {
+    animated = true;
+}
+

@@ -202,6 +202,12 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
             gameUI->setButtonEnabled(ESCAPE, false);
         }
 
+        if (command == Command::Offline) {
+            command = Command::LeftClick;
+            row = candidateIndex;
+            column = qrand() % assets->getCardArray(candidateIndex).size();
+        }
+
         if (command == Command::LeftClick) {//must be a valid input (filtered by UI)
             if (row != candidateIndex) {
                 qWarning() << "Invalid input!351468786";
@@ -427,6 +433,11 @@ void GameController::defaultHandleHand(CardInfo *seletedCard, bool allowCancel) 
         gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
         gameUI->resetValidRows();
 
+        if (command == Command::Offline) {
+            command = Command::RightClick;
+            allowCancel = true;
+        }
+
         if (command == Command::RightClick) {
             //user try to cancel
             if (allowCancel) {//allow cancel,user will choose another card
@@ -587,6 +598,13 @@ GameController::handleHandValidPosition(CardInfo *seletedCard, bool allowCancel,
         gameUI->getUserInput(command, toR, toC, currentPlayer);
         gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
         gameUI->resetValidPositions();
+
+        if (command == Command::Offline) {
+            command = Command::LeftClick;
+            int randomIndex = qrand() % validPositions.size();
+            toR = validPositions[randomIndex].x();
+            toC = validPositions[randomIndex].y();
+        }
 
         if (command == Command::RightClick) {
             if (allowCancel) {
@@ -1051,7 +1069,13 @@ void GameController::start() {
     }
 
     if (resume) {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle(tr("Resuming game"));
+        messageBox.setText("resuming game");
+        messageBox.setStandardButtons(0);
+        messageBox.show();
         resumeFortune = network->readJsonObject();
+        messageBox.hide();
         QString cmd = resumeFortune["command"].toString();
         if (cmd == "end") {
             QMessageBox::information(nullptr, tr("cannot watch game"),
@@ -1154,9 +1178,11 @@ void GameController::transmitEndMessage() {
 }
 
 void GameController::resumeGame() {
+    if (resumeFortune["command"] != "resumegame") {
+        qWarning() << "not proper command resume game" + resumeFortune["command"].toString();
+    }
     assets->fromJson(resumeFortune["gameState"].toObject());
-    gameUI->loadCardFromAssets(assets);
-    gameUI->switchToScene(AbstractUI::GameScene);
+
     int localPlayer = -1;
     for (int player = 0; player < 2; player++) {
         if (assets->getPlayerName(player) == username) {
@@ -1165,6 +1191,15 @@ void GameController::resumeGame() {
         }
     }
     gameUI->setLocalPlayer(localPlayer);
+
+    gameUI->loadCardFromAssets(assets);
+    updateLabel();
+    gameUI->setLabelText(Player0_Name, assets->getPlayerName(0));
+    gameUI->setLabelText(Player1_Name, assets->getPlayerName(1));
+
+    gameUI->switchToScene(AbstractUI::PlayerChooserScene);
+    gameUI->switchToScene(AbstractUI::GameScene);
+
     gameUI->getOutputBuffers().clear();
     if (localPlayer == -1) {
         for (int player = 0; player < 2; player++) {
@@ -1172,6 +1207,7 @@ void GameController::resumeGame() {
         }
     } else {
         gameUI->getOutputBuffers().append(ioBuffer);
+        gameUI->getOutputBuffers().append(network);
         gameUI->setPlayerInputBuffer(localPlayer, ioBuffer);
         gameUI->setPlayerInputBuffer(localPlayer ^ 1, network);
     }

@@ -135,31 +135,31 @@ const QString PushButtonText[BUTTON_NUM] = {
 };
 
 const QList<QString> CardNameList = {//all cards can appear in DECK
-        "Geralt_Igni",
         "Arachas",
-        "Roach",
-        "Vran_Warrior",
         "Arachas_Behemoth",
-        "Thunderbolt_Potion",
+        "Archgriffin",
+        "Bekkers_Twisted_Mirror",
         "Commanders_Horn",
-        "Lacerate",
-        "Celaeno_Harpy",
-        "Earth_Elemental",
         "Crone_Brewess",
         "Crone_Weavess",
         "Crone_Whispess",
+        "Caranthir",
+        "Celaeno_Harpy",
+        "Geralt_Igni",
+        "Roach",
+        "Vran_Warrior",
+        "Thunderbolt_Potion",
+        "Lacerate",
+        "Earth_Elemental",
         "Frightener",
         "Geels",
-        "Bekkers_Twisted_Mirror",
         "Biting_Frost",
         "Impenetrable_Fog",
         "Torrential_Rain",
         "First_Light",
         "Foglet",
         "Woodland_Spirit",
-        "Archgriffin",
         "Wild_Hunt_Rider",
-        "Caranthir"
 };
 
 const QList<QString> LeaderNameList = {

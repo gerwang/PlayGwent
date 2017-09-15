@@ -85,7 +85,6 @@ private:
 
     QGraphicsLineItem selectionLine;
 
-    qreal focusPrevZValue{};
     QPoint ghostCoordinate{-1, -1};
 
     AbstractInputBuffer *inputBuffer[2];

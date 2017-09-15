@@ -164,7 +164,7 @@ void GraphicsUI::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
                     }
                     handled = true;
                     auto cardwidget = dynamic_cast<CardWidget *>(widget);
-                    if (focusWidget != cardwidget) {
+                    if (focusWidget != cardwidget && !cardwidget->isAnimated()) {
                         setFocusWidget(cardwidget);
                     }
                     break;
@@ -400,9 +400,9 @@ void GraphicsUI::setLocalPlayer(int player) {
 }
 
 void GraphicsUI::setCurrentPlayer(int player) {
-    currentPlayer = player;//TODO tpggle input verification
+    currentPlayer = player;
     while (coinWidget->getFace() != currentPlayer) {
-        coinWidget->flip();//TODO check if a non-bloking function counterpart is needed
+        coinWidget->flip();
     }
 }
 
@@ -468,7 +468,7 @@ void GraphicsUI::releaseSource() {
         source = nullptr;
     }
     if (sourceGhost != nullptr) {
-        if (source->scene() == this) {
+        if (sourceGhost->scene() == this) {
             removeItem(sourceGhost);
         }
         sourceGhost->deleteLater();
@@ -621,7 +621,6 @@ void GraphicsUI::createSpiritWidget(CardWidget *fromWidget) {
 void GraphicsUI::releaseFocusWidget() {
     if (focusWidget != nullptr) {
         focusWidget->shrink();
-        focusWidget->setZValue(focusPrevZValue);
         focusWidget = nullptr;
     }
 }
@@ -652,7 +651,6 @@ GraphicsUI::locateMousePosition(CardArrayWidget *arraywidget, const QPointF &mou
 void GraphicsUI::setFocusWidget(CardWidget *cardwidget) {
     releaseFocusWidget();
     focusWidget = cardwidget;
-    focusPrevZValue = focusWidget->zValue();
     focusWidget->setZValue(100);
     focusWidget->expand();
     createSpiritWidget(cardwidget);

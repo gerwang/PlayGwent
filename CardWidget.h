@@ -75,6 +75,16 @@ public:
 
     CardInfo *getCardinfo() const;
 
+    bool isAnimated() const;
+
+    void setAnimated(bool animated);
+
+    void lockAnimated();
+
+public slots:
+
+    void unlockAnimated();
+
 private:
     CardInfo *cardinfo{};
 // the date structure stores the card infomation
@@ -90,7 +100,9 @@ private:
     int face{};
     int renderFlag{};
     bool validTarget{};
+    bool animated;
     QGraphicsRotation *spiritRotation{};
+
 };
 
 #endif // SMALLCARDWIDGET_H

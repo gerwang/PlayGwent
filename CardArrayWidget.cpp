@@ -79,6 +79,10 @@ QPointF CardArrayWidget::makeSpaceForCardAt(int index, bool enableAnimation, boo
                         pos--;
                     }
                     QPropertyAnimation *animation = new QPropertyAnimation(cards[pos], "pos", group);
+
+                    cards[pos]->lockAnimated();
+                    connect(animation, &QPropertyAnimation::finished, cards[pos], &CardWidget::unlockAnimated);
+
                     animation->setEndValue(destinationPos[newPos]);
                     animation->setDuration(CardArrayMakePlaceDuration);
                     group->addAnimation(animation);
