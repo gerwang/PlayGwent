@@ -21,7 +21,9 @@ void Geels::slotOnDeploy(CardInfo *mover, int fromR, int toR) {
         for (auto type : typeList) {
             for (int column = 0; column < deck.size(); column++) {
                 if (deck[column]->getType() == type) {
+                    GameController::controller()->setAnimation(false);
                     GameController::controller()->performMoveCardToRightTop(deckIndex, column, Player_Candidate);
+                    GameController::controller()->setAnimation(true);
                     break;
                 }
             }

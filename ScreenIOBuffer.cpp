@@ -21,3 +21,7 @@ void ScreenIOBuffer::writeUserOutput(Command command, int row, int column) {
     eventQueue.append({command, row, column});
     emit ready();
 }
+
+void ScreenIOBuffer::addInviteMessage() {
+    writeUserOutput(QueryInvite, -1, -1);
+}

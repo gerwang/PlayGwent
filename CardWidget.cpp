@@ -1,5 +1,6 @@
 #include "CardWidget.h"
 #include "GameConstant.h"
+#include "CardArrayWidget.h"
 #include <QPainter>
 #include <QDebug>
 #include <QPropertyAnimation>
@@ -190,10 +191,14 @@ void CardWidget::shrink() {
     qreal halfHeight = defaultSize.height() / 2;
     QRectF nextGeometry(geometry().center() - QPointF(halfWidth, halfHeight),
                         geometry().center() + QPointF(halfWidth, halfHeight));
-    QPropertyAnimation *expandAnim = new QPropertyAnimation(this, "geometry");
-    expandAnim->setEndValue(nextGeometry);
-    expandAnim->setDuration(CardExpandAnimDuration);
-    expandAnim->start(QPropertyAnimation::DeleteWhenStopped);
+    QPropertyAnimation *shrinkAnim = new QPropertyAnimation(this, "geometry");
+    auto parentArray = dynamic_cast<CardArrayWidget *>(parentItem());
+    if (parentArray != nullptr) {
+        connect(shrinkAnim, &QPropertyAnimation::finished, parentArray, &CardArrayWidget::clean);
+    }
+    shrinkAnim->setEndValue(nextGeometry);
+    shrinkAnim->setDuration(CardExpandAnimDuration);
+    shrinkAnim->start(QPropertyAnimation::DeleteWhenStopped);
 }
 
 int CardWidget::getRenderFlag() const {
@@ -324,5 +329,9 @@ void CardWidget::unlockAnimated() {
 
 void CardWidget::lockAnimated() {
     animated = true;
+}
+
+qreal CardWidget::getDefaultHeight() {
+    return defaultSize.height();
 }
 

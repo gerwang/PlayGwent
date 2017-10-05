@@ -28,6 +28,9 @@ void Bekkers_Twisted_Mirror::slotOnHandSeleted(CardInfo *seletedCard, bool allow
             gameUI->resetValidRows();
 
             if (command == Command::Offline) {
+                gameUI->execMessageBox(tr("Player timeout"),
+                                       tr("%1 is timeout").arg(assets->getPlayerName(currentPlayer)),
+                                       PlayerTimeoutDuration);
                 allowCancel = true;
                 command = Command::RightClick;
             }

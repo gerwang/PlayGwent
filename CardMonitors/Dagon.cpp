@@ -33,6 +33,7 @@ void Dagon::slotOnDeploy(CardInfo *mover, int fromR, int toR) {
         CardInfo *seletedCard = assets->getCardArray(Player_Seleted).first();
         int handIndex = assets->getHandIndex(fromPlayer);
         GameController::controller()->performMoveAllCardsFromAToB(Player_Seleted, handIndex);
+
         while (!candidates.empty()) {
             GameController::controller()->removeCardFromGame(candidates.first());
         }

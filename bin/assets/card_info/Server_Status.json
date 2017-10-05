@@ -1,0 +1,14 @@
+{
+	"cardName":"Server_Status",
+	"attributes":["ui"],
+	"infomation":"Invite players and watch ongoing games",
+	"initialStrength":0,
+	"currentStrength":0,
+	"armor":0,
+	"faction":"Neutral",
+	"loyalty":"Loyal",
+	"row":"Event",
+	"type":"Bronze",
+	"CD":-1,
+	"shield":false
+}

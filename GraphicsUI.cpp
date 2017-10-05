@@ -240,7 +240,9 @@ void GraphicsUI::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
             if (ghostCoordinate != QPoint(-1, -1)) {
                 cardArrays[ghostCoordinate.x()].makeSpaceForCardAt(-1, animationFlag);
                 ghostCoordinate = QPoint(-1, -1);
-                removeItem(sourceGhost);
+                if (sourceGhost != nullptr && sourceGhost->scene() == this) {
+                    removeItem(sourceGhost);
+                }
             }
         }
     }
@@ -253,7 +255,7 @@ void GraphicsUI::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 
 
     const QList<QGraphicsItem *> &itemList = items(mouseEvent->scenePos());
-    Command command;
+    Command command{};
     int row = -1, column = -1;
     bool handled = false;
     if (mouseEvent->button() == Qt::RightButton) {
@@ -401,7 +403,13 @@ void GraphicsUI::setLocalPlayer(int player) {
 
 void GraphicsUI::setCurrentPlayer(int player) {
     currentPlayer = player;
-    while (coinWidget->getFace() != currentPlayer) {
+
+    int targetFace = currentPlayer;
+    if (localPlayer == 1) {
+        targetFace ^= 1;
+    }
+
+    while (coinWidget->getFace() != targetFace) {
         coinWidget->flip();
     }
 }
@@ -418,7 +426,13 @@ void GraphicsUI::setRowWeather(int row, Weather weatherType) {
 
 
 void GraphicsUI::getUserInput(Command &clicktype, int &row, int &column, int player) {
+    if (useTimerFlag) {
+        startRound();
+    }
     inputBuffer[player]->getUserInput(clicktype, row, column);
+    if (useTimerFlag) {
+        stopRound();
+    }
 }
 
 void GraphicsUI::moveCard(int fromR, int fromC, int toR, int toC) {//write a bloking function
@@ -464,7 +478,9 @@ void GraphicsUI::setPlayerInputState(int player, AbstractUI::InputState state) {
 void GraphicsUI::releaseSource() {
     if (source != nullptr) {
         source->shrink();
-        removeItem(&selectionLine);
+        if (selectionLine.scene() == this) {
+            removeItem(&selectionLine);
+        }
         source = nullptr;
     }
     if (sourceGhost != nullptr) {
@@ -485,7 +501,7 @@ void GraphicsUI::setSource(int row, int column) {
     selectionLine.setLine(QLineF(source->geometry().center(), source->geometry().center()));
     addItem(&selectionLine);
     sourceGhost = new CardWidget(source->getCardinfo());
-    sourceGhost->setWidth(source->size().width());
+    sourceGhost->setHeight(source->getDefaultHeight());
     sourceGhost->setRenderFlag(sourceGhost->getRenderFlag() | CardWidget::DrawTransparent);
 }
 
@@ -733,7 +749,9 @@ void GraphicsUI::setLeader(CardInfo *leaderInfo) {
 }
 
 void GraphicsUI::clearLeader() {
-    removeItem(leaderWidget);
+    if (leaderWidget->scene() == this) {
+        removeItem(leaderWidget);
+    }
     leaderWidget->deleteLater();
     leaderWidget = nullptr;
 }
@@ -753,5 +771,42 @@ void GraphicsUI::setAnimationFlag(bool animationFlag) {
 void GraphicsUI::changePlayerOneVisible() {
     int facemode = cardArrays[Player1_Hand].getDefaultFace();
     cardArrays[Player1_Hand].setDefaultFace(facemode ^ 1);
+}
+
+CardWidget *GraphicsUI::getFocusWidget() const {
+    return focusWidget;
+}
+
+void GraphicsUI::startRound() {
+    if (currentPlayer != localPlayer) {
+        return;
+    }
+    timeWidget.setPos(SceneOriginPoint[currentScene] + TimerPosition[currentScene]);
+    timeWidget.startTimer();
+    addItem(&timeWidget);
+    connect(&timeWidget, &TimeWidget::timeup, this, &GraphicsUI::handleTimeUp);
+}
+
+void GraphicsUI::stopRound() {
+    if (currentPlayer != localPlayer) {
+        return;
+    }
+    timeWidget.stopTimer();
+    removeItem(&timeWidget);
+    disconnect(&timeWidget, &TimeWidget::timeup, this, &GraphicsUI::handleTimeUp);
+}
+
+void GraphicsUI::handleTimeUp() {
+    for (auto target:outputBuffers) {
+        target->writeUserOutput(Command::Offline, -1, -1);
+    }
+}
+
+void GraphicsUI::resetRound() {
+    timeWidget.resetTimer(60);
+}
+
+void GraphicsUI::setUseTimerFlag(bool useTimerFlag) {
+    GraphicsUI::useTimerFlag = useTimerFlag;
 }
 

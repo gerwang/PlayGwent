@@ -19,8 +19,17 @@ void Archgriffin::slotOnDeploy(CardInfo *mover, int fromR, int toR) {
         graveyardBackup[1] = assets->getCardArray(Player1_Graveyard);
         if (!graveyardBackup[0].empty() || !graveyardBackup[1].empty()) {//really have a card to move
 
-            GameController::controller()->performMoveAllCardsFromAToB(Player0_Graveyard, Player_Candidate);
-            GameController::controller()->performMoveAllCardsFromAToB(Player1_Graveyard, Player_Candidate);
+            GameController::controller()->setAnimation(false);
+            for (int player = 0; player < 2; player++) {
+                int graveyardId = (player == 0 ? Player0_Graveyard : Player1_Graveyard);
+                const QList<CardInfo *> &graveyard = assets->getCardArray(graveyardId);
+                for (int column = graveyard.size() - 1; column >= 0; column--) {
+                    if (graveyard[column]->getType() == CardInfo::Bronze) {//only bronze card
+                        GameController::controller()->performMoveCardToRightTop(graveyardId, column, Player_Candidate);
+                    }
+                }
+            }
+            GameController::controller()->setAnimation(true);
 
             AbstractUI *gameUI = GameController::controller()->getGameUI();
             gameUI->switchToScene(AbstractUI::PlayerChooserScene);
@@ -33,6 +42,7 @@ void Archgriffin::slotOnDeploy(CardInfo *mover, int fromR, int toR) {
 
             CardInfo *seletedCard = assets->getCardArray(Player_Seleted).first();
 
+            GameController::controller()->setAnimation(false);
             GameController::controller()->performMoveAllCardsFromAToB(Player_Seleted, Player_Candidate);
             const QList<CardInfo *> &candidates = assets->getCardArray(Player_Candidate);
             while (!candidates.empty()) {//resume the candidate
@@ -44,6 +54,7 @@ void Archgriffin::slotOnDeploy(CardInfo *mover, int fromR, int toR) {
                     qWarning() << "invalid graveyard belong23874169075";
                 }
             }
+            GameController::controller()->setAnimation(true);
 
             gameUI->switchToScene(AbstractUI::GameScene);
 

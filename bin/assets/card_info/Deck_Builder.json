@@ -1,0 +1,14 @@
+{
+	"cardName":"Deck_Builder",
+	"attributes":["ui"],
+	"infomation":"Enter Deck Builder",
+	"initialStrength":0,
+	"currentStrength":0,
+	"armor":0,
+	"faction":"Neutral",
+	"loyalty":"Loyal",
+	"row":"Event",
+	"type":"Bronze",
+	"CD":-1,
+	"shield":false
+}

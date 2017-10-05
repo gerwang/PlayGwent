@@ -44,6 +44,7 @@ private:
     QJsonObject startFortune;
     Deck gameDeck;
     QJsonObject resumeFortune;
+    QTimer inviteTimer;
 
     void uploadReadyState();
 
@@ -161,6 +162,8 @@ public://functions declared here can only be called by monitors' controller()-> 
     void loadFromDeckAndJson();
 
     void enterGameLoop(bool skipFirst);
+
+    void setAnimation(bool flag);
 
 signals:
 

@@ -36,6 +36,8 @@ void GameController::startGame() {//player use which deck is already choosen
 }
 
 void GameController::gameLoop() {
+    gameUI->resetRound();
+    gameUI->setUseTimerFlag(true);
     if (assets->getRoundStatus() < 2) {//round start not long before
         if (assets->getRoundStatus() == 0) {
             DestroyAllCardsOnBattlefield();//clear the battlefield
@@ -90,6 +92,9 @@ void GameController::gameLoop() {
                     gameUI->setPlayerInputState(currentPlayer, AbstractUI::RejectAll);
 
                     if (command == Command::Offline) {
+                        gameUI->execMessageBox(tr("Player timeout"),
+                                               tr("%1 is timeout").arg(assets->getPlayerName(currentPlayer)),
+                                               PlayerTimeoutDuration);
                         randomlyMoveOneCardFromHandToGraveyard(currentPlayer);
                         assets->setHandled(true);
                     } else if (command == Command::Pass) {
@@ -118,6 +123,7 @@ void GameController::gameLoop() {
             assets->setCurrentPlayer(currentPlayer ^ 1);
         }
     }
+    gameUI->setUseTimerFlag(false);
 }
 
 void GameController::moveCardToRightTop(CardInfo *mover, int targetRow) {
@@ -203,9 +209,17 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
         }
 
         if (command == Command::Offline) {
-            command = Command::LeftClick;
-            row = candidateIndex;
-            column = qrand() % assets->getCardArray(candidateIndex).size();
+            gameUI->execMessageBox(tr("Player timeout"), tr("%1 is timeout").arg(assets->getPlayerName(player)),
+                                   PlayerTimeoutDuration);
+            if (allowEscape) {
+                command = Command::EscapeChoose;
+                row = -1;
+                column = -1;
+            } else {//WARNING: if some operation needs more than ONE choose and the player is offline, the game will STUCK!
+                command = Command::LeftClick;
+                row = candidateIndex;
+                column = qrand() % assets->getCardArray(candidateIndex).size();
+            }
         }
 
         if (command == Command::LeftClick) {//must be a valid input (filtered by UI)
@@ -434,6 +448,8 @@ void GameController::defaultHandleHand(CardInfo *seletedCard, bool allowCancel) 
         gameUI->resetValidRows();
 
         if (command == Command::Offline) {
+            gameUI->execMessageBox(tr("Player timeout"), tr("%1 is timeout").arg(assets->getPlayerName(currentPlayer)),
+                                   PlayerTimeoutDuration);
             command = Command::RightClick;
             allowCancel = true;
         }
@@ -600,6 +616,8 @@ GameController::handleHandValidPosition(CardInfo *seletedCard, bool allowCancel,
         gameUI->resetValidPositions();
 
         if (command == Command::Offline) {
+            gameUI->execMessageBox(tr("Player timeout"), tr("%1 is timeout").arg(assets->getPlayerName(currentPlayer)),
+                                   PlayerTimeoutDuration);
             command = Command::LeftClick;
             int randomIndex = qrand() % validPositions.size();
             toR = validPositions[randomIndex].x();
@@ -666,6 +684,7 @@ void GameController::cleanUpGame() {
         setPlayerName(player, "");
     }
     gameUI->setLocalPlayer(0);
+    gameUI->switchToScene(AbstractUI::PlayerChooserScene);
 }
 
 void GameController::updateLabel() {
@@ -944,11 +963,13 @@ Deck GameController::currentStateToDeck() {
 void GameController::startMainMenu() {
     prepareMainMenu();
     while (true) {
+//        inviteTimer.start(); TODO implement invite
         gameUI->setPlayerInputState(0, AbstractUI::MustValidTarget);
         Command command;
         int row, column;
         gameUI->getUserInput(command, row, column, 0);
         gameUI->setPlayerInputState(0, AbstractUI::RejectAll);
+//        inviteTimer.stop();
         if (command == Command::LeftClick) {
             QString cardName = assets->getCardArray(row).at(column)->getCardName();
             if (cardName == "Match") {
@@ -968,7 +989,18 @@ void GameController::startMainMenu() {
                 request.insert("deck", jsonDeckObject);
                 network->writeJsonObject(request);
 
-                startFortune = network->readJsonObject();
+                while (true) {
+                    startFortune = network->readJsonObject();
+                    QString command = startFortune["command"].toString();
+                    if (command == "heartbeat") {
+                        QJsonObject heartbeat;
+                        heartbeat.insert("command", "heartbeat_response");
+                        network->writeJsonObject(heartbeat);
+                    } else if (command == "init") {
+                        break;
+                    }
+                }
+
                 messageBox.hide();
 
                 QTimer::singleShot(1, this, &GameController::startGame);
@@ -987,12 +1019,50 @@ void GameController::startMainMenu() {
                     if (!dialog.getSelectedPlayer().isEmpty() &&
                         dialog.getSelectedPlayer() != username) {//a player cannot invite himself
 
+                        /*
+                        gameDeck = performChooseDeck(false);
+                        QJsonObject inviteRequest;
+                        inviteRequest.insert("command", "invite");
+                        inviteRequest.insert("target", dialog.getSelectedPlayer());
+                        QJsonObject jsonGameDeck;
+                        gameDeck.toJson(jsonGameDeck);
+                        inviteRequest.insert("deck", jsonGameDeck);
+                        network->writeJsonObject(inviteRequest);
+
+                        QMessageBox messageBox1;
+                        messageBox1.setWindowTitle(tr("inviting"));
+                        messageBox1.setText(tr("waiting for player to respnose"));
+                        messageBox1.setStandardButtons(0);
+                        messageBox1.show();
+
+                        QJsonObject inviteResponse = network->readJsonObject();
+
+                        messageBox1.hide();
+
+                        if (inviteResponse["command"].toString() != "respond_invite") {
+                            qWarning() << "not proper response! expected respond_invite, find "
+                                       << inviteResponse["command"].toString();
+                        }
+                        if (inviteResponse["validation"].toBool()) {
+                            startFortune = network->readJsonObject();
+                            cleanUpMainMenu();
+                            QTimer::singleShot(1, this, &GameController::startGame);
+                            return;
+                        } else {
+                            QMessageBox::information(nullptr, tr("cannot invite"), inviteResponse["reason"].toString());
+                            cleanUpMainMenu();
+                            prepareMainMenu();
+                        }
+                         *///TODO implement invite
+
                     } else if (!dialog.getSelectedGame().isEmpty()) {
                         QJsonObject gamePost;
                         gamePost.insert("command", "watch");
                         gamePost.insert("gameName", dialog.getSelectedGame());
                         network->writeJsonObject(gamePost);
+
                         QJsonObject response = network->readJsonObject();
+
                         if (response["command"].toString() != "respond_watch") {
                             qWarning() << "invalid response";
                         }
@@ -1024,6 +1094,37 @@ void GameController::startMainMenu() {
                 cleanUpMainMenu();
                 return;
             }
+        } else if (command == Command::QueryInvite) {
+            QJsonObject request;
+            request.insert("command", "isinvited");
+            network->writeJsonObject(request);
+            request = network->readJsonObject();
+            if (request["command"].toString() != "respond_isinvited") {
+                qWarning() << "not proper command, expected respond_isinvited, find " << request["command"].toString();
+            }
+            if (request["isinvited"].toBool()) {
+                QString invitorName = request["inviter"].toString();
+                int result = QMessageBox::question(nullptr, tr("Incoming invitation"),
+                                                   tr("Do you want to play with %1?").arg(invitorName));
+                QJsonObject invite_response;
+                invite_response.insert("command", "invite_response");
+                invite_response.insert("inviterName", invitorName);
+                if (result == QMessageBox::Yes) {
+                    invite_response.insert("accept", true);
+                    gameDeck = performChooseDeck(false);
+                    QJsonObject jsonDeck;
+                    gameDeck.toJson(jsonDeck);
+                    invite_response.insert("deck", jsonDeck);
+                    network->writeJsonObject(invite_response);
+                    startFortune = network->readJsonObject();
+                    cleanUpMainMenu();
+                    QTimer::singleShot(1, this, &GameController::startGame);
+                    return;
+                } else {
+                    invite_response.insert("accept", false);
+                    network->writeJsonObject(invite_response);
+                }
+            }
         }
     }
 }
@@ -1042,6 +1143,8 @@ void GameController::prepareMainMenu() {
     gameUI->setPlayerInputBuffer(0, ioBuffer);
     gameUI->getOutputBuffers().append(ioBuffer);
     gameUI->setWholeRowValidPositions(Main_Menu);
+    inviteTimer.setInterval(4000);
+    connect(&inviteTimer, &QTimer::timeout, ioBuffer, &ScreenIOBuffer::addInviteMessage);
 }
 
 void GameController::cleanUpMainMenu() {
@@ -1049,6 +1152,7 @@ void GameController::cleanUpMainMenu() {
     gameUI->setPlayerInputBuffer(0, nullptr);
     gameUI->getOutputBuffers().clear();
     gameUI->resetValidPositions();
+    disconnect(&inviteTimer, &QTimer::timeout, ioBuffer, &ScreenIOBuffer::addInviteMessage);
     cleanUpRow(Main_Menu);
 }
 
@@ -1247,6 +1351,10 @@ void GameController::enterGameLoop(bool skipFirst) {
     //game end
     cleanUpGame();
     QTimer::singleShot(1, this, &GameController::startMainMenu);
+}
+
+void GameController::setAnimation(bool flag) {
+    gameUI->setAnimationFlag(flag);
 }
 
 

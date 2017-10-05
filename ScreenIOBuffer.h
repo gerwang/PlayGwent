@@ -28,6 +28,10 @@ private:
 signals:
 
     void ready();
+
+public slots:
+
+    void addInviteMessage();
 };
 
 

@@ -12,6 +12,7 @@
 #include "CardWidget.h"
 #include "CardArrayWidget.h"
 #include "AbstractOutputBuffer.h"
+#include "TimeWidget.h"
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsProxyWidget>
@@ -89,18 +90,24 @@ private:
 
     AbstractInputBuffer *inputBuffer[2];
 
+    TimeWidget timeWidget{};
+
     bool animationFlag{};
+    bool useTimerFlag{};
 public:
+
+    void setUseTimerFlag(bool useTimerFlag);
+
+    CardWidget *getFocusWidget() const;
+
     bool isAnimationFlag() const;
 
     void setAnimationFlag(bool animationFlag);
 
-public:
     void setPlayerInputBuffer(int player, AbstractInputBuffer *input);
 
     void validateBeforeErase(CardWidget *cardwidget);
 
-public:
     void setLineEditText(const QString &text) override;
 
     QString getLineEditText() override;
@@ -173,6 +180,14 @@ public:
     void loadARowFromAssets(int row, GameAssets *assets);
 
     void changePlayerOneVisible();
+
+    void startRound();
+
+    void stopRound();
+
+    void resetRound();
+
+    void handleTimeUp();
 };
 
 

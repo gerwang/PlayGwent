@@ -1,0 +1,14 @@
+{
+	"cardName":"Match",
+	"attributes":["ui"],
+	"infomation":"Click to start match",
+	"initialStrength":0,
+	"currentStrength":0,
+	"armor":0,
+	"faction":"Neutral",
+	"loyalty":"Loyal",
+	"row":"Event",
+	"type":"Bronze",
+	"CD":-1,
+	"shield":false
+}

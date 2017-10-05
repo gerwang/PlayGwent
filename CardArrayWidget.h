@@ -7,6 +7,7 @@
 
 #include "CardWidget.h"
 #include "GameConstant.h"
+#include "AnimatedRect.h"
 #include <QGraphicsWidget>
 
 class CardArrayWidget : public QGraphicsWidget {
@@ -80,7 +81,7 @@ private:
     bool clickValid;
     Weather weather;
 
-    QGraphicsRectItem weatherRect;
+    AnimatedRect weatherRect;
 
     qreal cardWidth;
 
@@ -91,6 +92,10 @@ private:
     qreal rollerSmoothing;
 
     bool renderInfo{};
+
+public slots:
+
+    void clean();
 };
 
 

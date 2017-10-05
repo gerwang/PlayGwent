@@ -50,6 +50,7 @@ int NetworkManager::login(const QString &username, const QString &password) {
     QJsonObject loginInfo;
     loginInfo.insert("username", username);
     loginInfo.insert("password", password);
+    loginInfo.insert("version", GameVersion);
     writeJsonObject(loginInfo);
     QJsonObject replyInfo = readJsonObject();
     bool validation = replyInfo["validation"].toBool();

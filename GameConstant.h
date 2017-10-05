@@ -19,6 +19,7 @@ const int CardArrayMakePlaceDuration = 200;
 const int WeatherChangeDuration = 900;
 const double MouseWheelSpeed = 1.2;
 const int SwitchSceneDuration = 250;
+const int PlayerTimeoutDuration = 600;
 
 const QString CardSlotMSG[ROW_NUM] =
         {
@@ -123,7 +124,16 @@ const QString WeatherMSG[4] = {
 //TODO there should be a lineedit to edit the deck name
 
 enum Command {
-    LeftClick, RightClick, Pass, EscapeChoose, SaveDeck, ClipboardImport, ClipboardExport, TimerRequest, Offline
+    LeftClick,
+    RightClick,
+    Pass,
+    EscapeChoose,
+    SaveDeck,
+    ClipboardImport,
+    ClipboardExport,
+    TimerRequest,
+    Offline,
+    QueryInvite
 };
 
 const QString PushButtonText[BUTTON_NUM] = {
@@ -133,6 +143,8 @@ const QString PushButtonText[BUTTON_NUM] = {
         "import from clipboard",
         "export to clipboard"
 };
+
+const QString GameVersion = "v1.0";
 
 const QList<QString> CardNameList = {//all cards can appear in DECK
         "Arachas",
@@ -169,14 +181,16 @@ const QList<QString> LeaderNameList = {
 
 const int ModeArea[ROW_NUM] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0};
 const int DefaultFace[ROW_NUM] = {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0};
-const int CardWidth[ROW_NUM] = {76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 245, 245, 95, 76, 76, 76, 76, 253};
-const int ArgOne[ROW_NUM] = {76, 76, 745, 640, 640, 640, 640, 640, 640, 745, 76, 76, 84, 84, 17, 758, 845, 845, 845,
+const int CardWidth[ROW_NUM] = {74, 74, 66, 66, 66, 66, 66, 66, 66, 66, 74, 74, 245, 245, 95, 66, 66, 66, 66, 253};
+const int ArgOne[ROW_NUM] = {74, 74, 745, 734, 734, 734, 734, 734, 734, 745, 74, 74, 84, 84, 17, 758, 845, 845, 845,
                              1500};
 const int ArgTwo[ROW_NUM] = {0, 0, 9, 10, 10, 10, 10, 10, 10, 9, 0, 0, 800, 800, 800, 9, 10, 10, 10, 31};
-const int PosX[ROW_NUM] = {1330, 1430, 439, 477, 477, 477, 477, 477, 477, 439, 1430, 1330, 333, 333, 418, 418, 373, 373,
+const int PosX[ROW_NUM] = {1330, 1430, 439, 433, 433, 433, 433, 433, 433, 439, 1430, 1330, 333, 333, 418, 418, 373, 373,
                            373, 51};
-const int PosY[ROW_NUM] = {14, 14, 14, 160, 250, 347, 471, 574, 671, 787, 787, 787, 272, 910, 663, 442, 324, 206, 100,
+const int PosY[ROW_NUM] = {14, 14, 14, 155, 250, 347, 471, 569, 666, 787, 787, 787, 272, 910, 663, 442, 324, 206, 100,
                            260};
 const QPointF LeaderPosition = QPointF(161, 630);
+
+const QPointF TimerPosition[4] = {QPointF(-1, -1), QPointF(392, 420), QPointF(-1, -1), QPointF(366, 50)};
 
 #endif //PLAYGWENT_GAMECONSTANT_H_H

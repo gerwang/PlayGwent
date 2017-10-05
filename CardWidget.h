@@ -23,7 +23,7 @@ public:
         DrawTransparent = 4
     };
 
-    const QPixmap &getPixmap(const QString &path);
+    const static QPixmap &getPixmap(const QString &path);
 
     CardWidget() = default;//from some ui item
 
@@ -80,6 +80,8 @@ public:
     void setAnimated(bool animated);
 
     void lockAnimated();
+
+    qreal getDefaultHeight();
 
 public slots:
 

@@ -3,6 +3,7 @@
 //
 
 #include "CardArrayWidget.h"
+#include "GraphicsUI.h"
 #include <QParallelAnimationGroup>
 #include <QPropertyAnimation>
 #include <QEventLoop>
@@ -79,6 +80,11 @@ QPointF CardArrayWidget::makeSpaceForCardAt(int index, bool enableAnimation, boo
                         pos--;
                     }
                     QPropertyAnimation *animation = new QPropertyAnimation(cards[pos], "pos", group);
+
+                    auto *ui_scene = dynamic_cast<GraphicsUI *>(scene());
+                    if (ui_scene != nullptr && ui_scene->getFocusWidget() == cards[pos]) {
+                        ui_scene->releaseFocusWidget();
+                    }
 
                     cards[pos]->lockAnimated();
                     connect(animation, &QPropertyAnimation::finished, cards[pos], &CardWidget::unlockAnimated);
@@ -194,20 +200,16 @@ void CardArrayWidget::changeWeatherTo(Weather nextWeather) {
         return;
     }
     weather = nextWeather;
-    auto *timeLine = new QTimeLine(WeatherChangeDuration);
-    auto *animation = new QGraphicsItemAnimation;
-    animation->setItem(&weatherRect);
-    animation->setTimeLine(timeLine);
-    for (int i = 0; i < 10; i++) {
-        animation->setScaleAt(i / 10.0, i / 10.0, 1);
-    }
-    QEventLoop loop;
-    connect(timeLine, &QTimeLine::finished, &loop, &QEventLoop::quit);
+    QPropertyAnimation animation(&weatherRect, "rect");
+    qreal height = cardWidth / 266 * 378;
+    weatherRect.setRect(QRectF(QPointF(), QSizeF(0, height)));
     weatherRect.setBrush(weatherColor[nextWeather]);
-    timeLine->start();
+    animation.setEndValue(QRectF(QPointF(), QSizeF(fixedWidth, height)));
+    animation.setDuration(WeatherChangeDuration);
+    QEventLoop loop;
+    connect(&animation, &QPropertyAnimation::finished, &loop, &QEventLoop::quit);
+    animation.start();
     loop.exec();
-    delete animation;
-    delete timeLine;
 }
 
 int CardArrayWidget::getDefaultFace() const {
@@ -332,6 +334,10 @@ void CardArrayWidget::applyFaceToCard(CardWidget *card, bool enableAnimation) {
             card->setFace(defaultFace);
         }
     }
+}
+
+void CardArrayWidget::clean() {
+    makeSpaceForCardAt(-1, false);
 }
 
 

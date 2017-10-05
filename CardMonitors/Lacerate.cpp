@@ -28,6 +28,9 @@ void Lacerate::slotOnHandSeleted(CardInfo *seletedCard, bool allowCancel) {
             gameUI->resetValidRows();
 
             if (command == Command::Offline) {
+                gameUI->execMessageBox(tr("Player timeout"),
+                                       tr("%1 is timeout").arg(assets->getPlayerName(currentPlayer)),
+                                       PlayerTimeoutDuration);
                 command = Command::RightClick;
                 allowCancel = true;
             }
