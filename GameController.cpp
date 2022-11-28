@@ -274,7 +274,7 @@ void GameController::handleRedrawCard(int player) {//handle two players' redraw 
     int deckIndex = assets->getDeckIndex(player);
     performChooseCard(Player_Candidate, Player_Seleted,
                       deckIndex, NumberToRedraw[assets->getCurrentRound()], player,
-                      true, true, true, tr("%1 is choosing %2 card(s)").arg(
+                      true, true, true, tr("%1 is choosing %2 card(s) to replace").arg(
                     assets->getPlayerName(player)).arg(NumberToRedraw[assets->getCurrentRound()]));
 
     //insert the seleted randomly to deck
@@ -527,7 +527,7 @@ void GameController::resumeCD(CardInfo *unit, int initialCD) {
 }
 
 void GameController::boostFromSrcToDests(CardInfo *src, const QList<CardInfo *> &dests, int boost, int armor) {
-    for (auto dest:dests) {
+    for (auto dest: dests) {
         dest->setArmor(dest->getArmor() + armor);
         dest->setCurrentStrength(dest->getCurrentStrength() + boost);
     }
@@ -541,7 +541,7 @@ void GameController::boostFromSrcToDests(CardInfo *src, const QList<CardInfo *> 
         srcPoint = QPoint(-1, -1);
     }
     QList<QPoint> destPoints;
-    for (auto dest:dests) {
+    for (auto dest: dests) {
         assets->getCardPosition(dest, row, column);
         destPoints.append(QPoint(row, column));
     }
@@ -550,7 +550,7 @@ void GameController::boostFromSrcToDests(CardInfo *src, const QList<CardInfo *> 
 }
 
 void GameController::damageFromSrcToDests(CardInfo *src, const QList<CardInfo *> &dests, int damage, bool armorUseful) {
-    for (auto dest:dests) {
+    for (auto dest: dests) {
         int tempDamage = damage;
         if (dest->isShield()) {//has a shield
             dest->setShield(false);
@@ -574,14 +574,14 @@ void GameController::damageFromSrcToDests(CardInfo *src, const QList<CardInfo *>
         srcPoint = QPoint(-1, -1);
     }
     QList<QPoint> destPoints;
-    for (auto dest:dests) {
+    for (auto dest: dests) {
         assets->getCardPosition(dest, row, column);
         destPoints.append(QPoint(row, column));
     }
     gameUI->showDamage(srcPoint, destPoints);
     updateLabel();
 
-    for (auto dest:dests) {//check if someone should be destroyed
+    for (auto dest: dests) {//check if someone should be destroyed
         if (dest->getCurrentStrength() == 0) {
             DestroyCard(dest);
         }
@@ -804,7 +804,7 @@ Deck GameController::performChooseDeck(bool allowNewDeck) {
     Deck nowDeck{};
 
     if (seletedName == "New_Deck") {
-        for (const auto &leaderName:LeaderNameList) {
+        for (const auto &leaderName: LeaderNameList) {
             performSpawnCardToPos(CardInfo::createByName(leaderName), Player_Candidate,
                                   assets->getCardArray(Player_Candidate).size());
         }
@@ -817,7 +817,7 @@ Deck GameController::performChooseDeck(bool allowNewDeck) {
         nowDeck.setLeader(seletedLeader);
         nowDeck.getCards().clear();
     } else {
-        for (const auto &deck:assets->getDecks()) {
+        for (const auto &deck: assets->getDecks()) {
             if (deck.getName() == seletedName) {
                 nowDeck = deck;
                 break;
@@ -866,7 +866,7 @@ void GameController::prepareChooseDecks(bool allowNewDeck) {
     deckDir.setFilter(QDir::Files | QDir::NoSymLinks);
     QFileInfoList fileInfoList = deckDir.entryInfoList();
     assets->getDecks().clear();
-    for (const auto &fileInfo:fileInfoList) {
+    for (const auto &fileInfo: fileInfoList) {
         if (QString::compare(fileInfo.suffix(), "json", Qt::CaseInsensitive) == 0) {
             QFile file;
             file.setFileName(fileInfo.absoluteFilePath());
@@ -895,7 +895,7 @@ void GameController::performSpawnCardToPos(CardInfo *card, int row, int column) 
 }
 
 void GameController::initializeDeckCards() {
-    for (const auto &card:CardNameList) {
+    for (const auto &card: CardNameList) {
         CardInfo::Type type = Deck::getTypeByName(card);
         QList<CardInfo *> &candidateRow = assets->getCardArray(DeckBuilder_Candidate);
         for (int cnt = 0; cnt < MaxSameTypeCount[type]; cnt++) {
@@ -922,7 +922,7 @@ bool GameController::performMoveAccordingToDeck(Deck &deck) {
     gameUI->setLeader(assets->getLeaderInfo());
 
     gameUI->setLineEditText(deck.getName());
-    for (const auto &cardName:deck.getCards()) {
+    for (const auto &cardName: deck.getCards()) {
         int index = assets->getCardIndexByName(DeckBuilder_Candidate, cardName);
         if (index == -1) {
             return false;
@@ -953,7 +953,7 @@ Deck GameController::currentStateToDeck() {
     result.getCards().clear();
     result.setName(gameUI->getLineEditText());
     for (int row = DeckBuilder_NoHP; row <= DeckBuilder_Melee_Event; row++) {
-        for (auto card:assets->getCardArray(row)) {
+        for (auto card: assets->getCardArray(row)) {
             result.getCards().append(card->getCardName());
         }
     }
@@ -1135,7 +1135,7 @@ void GameController::prepareMainMenu() {
     }
     gameUI->setAnimationFlag(true);
     static const QString MainMenuNameList[3] = {"Match", "Server_Status", "Deck_Builder"};
-    for (const auto &name:MainMenuNameList) {
+    for (const auto &name: MainMenuNameList) {
         performSpawnCardToPos(CardInfo::createByName(name), Main_Menu, assets->getCardArray(Main_Menu).size());
     }
     gameUI->setAnimationFlag(false);
