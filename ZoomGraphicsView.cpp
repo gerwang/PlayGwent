@@ -13,3 +13,16 @@ void ZoomGraphicsView::resizeEvent(QResizeEvent *event) {
     fitInView(sceneRect(), Qt::IgnoreAspectRatio);
     QGraphicsView::resizeEvent(event);
 }
+
+void ZoomGraphicsView::closeEvent(QCloseEvent *event) {
+    QMessageBox::StandardButton resBtn = QMessageBox::question(this, "PlayGwent",
+                                                               tr("Are you sure?\n"),
+                                                               QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
+                                                               QMessageBox::Yes);
+    if (resBtn != QMessageBox::Yes) {
+        event->ignore();
+    } else {
+        event->accept();
+        exit(0);
+    }
+}
