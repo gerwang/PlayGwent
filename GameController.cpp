@@ -979,7 +979,9 @@ void GameController::startMainMenu() {
                 QMessageBox messageBox;
                 messageBox.setWindowTitle("Matching");
                 messageBox.setText("Finding appropriate player to compete with...");
-                messageBox.setStandardButtons(0);
+                messageBox.setStandardButtons(QMessageBox::No);
+                messageBox.setButtonText(QMessageBox::No, "Cancel");
+                connect(&messageBox, &QMessageBox::rejected, []() { exit(0); });
                 messageBox.show();
                 QJsonObject request;
 
