@@ -1,5 +1,19 @@
 # PlayGwent
 client code for a game like CD Projekt's gwent card game including registration, matchmaking and multiplayer game.
+
+# How to build & run
+
+```bash
+# clone this project
+cd PlayGwent
+mkdir build && cd build
+# Requires Qt5 is installed
+cmake ..
+make -j$(nproc)
+cd ../bin
+./PlayGwent
+```
+
 ## 程序模块介绍
 
 #### GameController

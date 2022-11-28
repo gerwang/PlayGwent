@@ -20,8 +20,8 @@ TimeWidget::TimeWidget() {
     unnameIcon.setPos(762, -8);
 
     textItem.setParentItem(this);
-    textItem.setPos(774, 4);
-    textItem.setFont(QFont("Arial", 32, 100, false));
+    textItem.setPos(774 + 10, 4 + 7);
+    textItem.setFont(QFont("Arial", 16, 80, false));
     textItem.setDefaultTextColor(Qt::lightGray);
 
     rectAnimation.setTargetObject(&timerRect);

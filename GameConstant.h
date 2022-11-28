@@ -98,8 +98,8 @@ enum PushButtonEnum {
 };
 
 enum TextLabelEnum {
-    //0~11 for each battlefield//TODO: why is this link indented?
-            Player_CardChooser_Title = 12,
+    //0~11 for each battlefield
+    Player_CardChooser_Title = 12,
     Player1_Name = 13,
     Player0_Name = 14,
     Label_Bronze_DeckBuilder = 15,

@@ -33,29 +33,29 @@ const QString GraphicsUI::ButtonText[BUTTON_NUM] = {
 
 
 const QPointF GraphicsUI::LabelPos[LABEL_NUM] = {
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(1549, 31),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(1262, 30),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(371, 33),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(366, 174),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 272),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 369),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(1551, 30) + QPointF(-1, -10),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(1264, 30) + QPointF(-7, -10),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(371, 30) + QPointF(-10, -10),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(366, 174) + QPointF(1, -5),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 272) + QPointF(1, -5),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 369) + QPointF(1, -5),
 
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 489),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 586),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 685),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(371, 850),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(1264, 848),
-        SceneOriginPoint[AbstractUI::GameScene] + QPointF(1551, 847),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 489) + QPointF(1, -5),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 586) + QPointF(1, -5),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(365, 685) + QPointF(1, -5),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(371, 850) + QPointF(-10, -5),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(1264, 850) + QPointF(-7, -5),
+        SceneOriginPoint[AbstractUI::GameScene] + QPointF(1551, 850) + QPointF(-1, -5),
 
-        SceneOriginPoint[AbstractUI::PlayerChooserScene] + QPointF(682, 117),
+        SceneOriginPoint[AbstractUI::PlayerChooserScene] + QPointF(40, 117),
 
         SceneOriginPoint[AbstractUI::GameScene] + QPointF(122, 38),
         SceneOriginPoint[AbstractUI::GameScene] + QPointF(118, 822),
 
-        SceneOriginPoint[AbstractUI::DeckBuilderScene] + QPointF(260, 198),
-        SceneOriginPoint[AbstractUI::DeckBuilderScene] + QPointF(233, 276),
-        SceneOriginPoint[AbstractUI::DeckBuilderScene] + QPointF(234, 354),
-        SceneOriginPoint[AbstractUI::DeckBuilderScene] + QPointF(193, 97),
+        SceneOriginPoint[AbstractUI::DeckBuilderScene] + QPointF(260, 198) + QPointF(-10, -5),
+        SceneOriginPoint[AbstractUI::DeckBuilderScene] + QPointF(233, 276) + QPointF(0, -5),
+        SceneOriginPoint[AbstractUI::DeckBuilderScene] + QPointF(234, 354) + QPointF(0, -5),
+        SceneOriginPoint[AbstractUI::DeckBuilderScene] + QPointF(193, 97) + QPointF(0, -20),
 
         SceneOriginPoint[AbstractUI::GameScene] + QPointF(232, 265),
         SceneOriginPoint[AbstractUI::GameScene] + QPointF(236, 582)
@@ -82,21 +82,21 @@ GraphicsUI::GraphicsUI() {
         addItem(&textItem[i]);
     }
     for (int row = Player1_Siege; row <= Player0_Siege; row++) {
-        textItem[row].setFont(QFont("Arial", 40, 300, false));
-        textItem[row].setPos(textItem[row].pos() - QPointF(7, 7));
+        textItem[row].setFont(QFont("Arial", 24, 300, false));
+        textItem[row].setPos(textItem[row].pos());
     }
     for (int row = Player1_CombatValue; row <= Player0_CombatValue; row++) {
-        textItem[row].setFont(QFont("Arial", 40, 300, false));
+        textItem[row].setFont(QFont("Arial", 24, 300, false));
     }
     textItem[Label_ALL_DeckBuilder].setFont(QFont("Arial", 24, 300, false));
-    textItem[Player_CardChooser_Title].setFont(QFont("Arial", 32, 300, false));
+    textItem[Player_CardChooser_Title].setFont(QFont("Arial", 24, 300, false));
 
     QPalette palette;
     palette.setColor(QPalette::ButtonText, QColor(201, 199, 197));
     for (int i = 0; i < BUTTON_NUM; i++) {
         pushButton[i].setStyleSheet("QPushButton {border-image: url(assets/ui/menu_inactive2.tex.png)}"
-                                            "QPushButton:hover{border-image:url(assets/ui/menu_active2.tex.png)}"
-                                            "QPushButton:pressed{border-image:url(assets/ui/menu_hit2.tex.png)}");
+                                    "QPushButton:hover{border-image:url(assets/ui/menu_active2.tex.png)}"
+                                    "QPushButton:pressed{border-image:url(assets/ui/menu_hit2.tex.png)}");
         pushButton[i].setFont(QFont("Arial", 16, 80, false));
         pushButton[i].setPalette(palette);
         pushButton[i].setText(ButtonText[i]);
@@ -152,7 +152,7 @@ GraphicsUI::GraphicsUI() {
 void GraphicsUI::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
     const QList<QGraphicsItem *> &itemList = items(mouseEvent->scenePos());
     bool handled = false;
-    for (const auto &item:itemList) {
+    for (const auto &item: itemList) {
         auto widget = dynamic_cast<QGraphicsWidget *>(item);
         if (widget != nullptr) {
             QString name = widget->metaObject()->className();
@@ -262,7 +262,7 @@ void GraphicsUI::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
         command = Command::RightClick;
         handled = true;
     } else {
-        for (const auto &item:itemList) {
+        for (const auto &item: itemList) {
             auto widget = dynamic_cast<QGraphicsWidget *>(item);
             if (widget != nullptr) {
                 QString name = widget->metaObject()->className();
@@ -331,7 +331,7 @@ void GraphicsUI::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 
     }
     if (handled) {
-        for (auto target:outputBuffers) {
+        for (auto target: outputBuffers) {
             target->writeUserOutput(command, row, column);
         }
     }
@@ -386,7 +386,7 @@ void GraphicsUI::execMessageBox(const QString &title, const QString &message, in
 }
 
 void GraphicsUI::setWholeRowValidPositions(int row) {
-    for (auto card:cardArrays[row].getCards()) {
+    for (auto card: cardArrays[row].getCards()) {
         card->setValidTarget(true);
     }
 }
@@ -446,21 +446,21 @@ void GraphicsUI::setLabelText(int index, QString text) {
 }
 
 void GraphicsUI::resetValidPositions() {
-    for (auto &cardArray:cardArrays) {
-        for (auto card:cardArray.getCards()) {
+    for (auto &cardArray: cardArrays) {
+        for (auto card: cardArray.getCards()) {
             card->setValidTarget(false);
         }
     }
 }
 
 void GraphicsUI::setValidPositions(const QList<QPoint> &validPositions) {
-    for (auto &point:validPositions) {
+    for (auto &point: validPositions) {
         cardArrays[point.x()].getCards().at(point.y())->setValidTarget(true);
     }
 }
 
 void GraphicsUI::resetValidRows() {
-    for (auto &cardArray:cardArrays) {
+    for (auto &cardArray: cardArrays) {
         cardArray.setClickValid(false);
     }
 }
@@ -555,7 +555,7 @@ void GraphicsUI::showDamage(QPoint src, const QList<QPoint> &dests) {
 void GraphicsUI::showFlyingEllipseFromSrcToDests(const QColor &color, QPoint src, const QList<QPoint> &dests) {
     auto *group = new QParallelAnimationGroup();
     static const int radius = 15, duration = 400;
-    for (const auto &dest:dests) {
+    for (const auto &dest: dests) {
         auto item = new AnimatedEllipse;
         item->setRect(-radius, -radius, radius * 2, radius * 2);
         item->setPen(QColor(0, 0, 0, 0));
@@ -580,7 +580,7 @@ void GraphicsUI::showFlyingEllipseFromSrcToDests(const QColor &color, QPoint src
 void GraphicsUI::showUpwardingRectangles(const QColor &color, const QList<QPoint> &dests) {
     auto group = new QParallelAnimationGroup();
     static const int duration = 400;
-    for (const auto &dest:dests) {
+    for (const auto &dest: dests) {
         auto seq = new QSequentialAnimationGroup(group);
         auto destwidget = cardArrays[dest.x()][dest.y()];
         QPointF position = destwidget->mapToScene(destwidget->mapFromParent(destwidget->pos()));
@@ -652,7 +652,7 @@ GraphicsUI::locateMousePosition(CardArrayWidget *arraywidget, const QPointF &mou
     }
     if (row != -1) {
         column = 0;
-        for (auto &cardwidget:arraywidget->getCards()) {
+        for (auto &cardwidget: arraywidget->getCards()) {
             QPointF centerPos = cardwidget->mapToScene(cardwidget->mapFromParent(cardwidget->geometry().center()));
             if (mousePos.x() > centerPos.x()) {
                 column++;
@@ -797,7 +797,7 @@ void GraphicsUI::stopRound() {
 }
 
 void GraphicsUI::handleTimeUp() {
-    for (auto target:outputBuffers) {
+    for (auto target: outputBuffers) {
         target->writeUserOutput(Command::Offline, -1, -1);
     }
 }
