@@ -35,7 +35,7 @@ void Arachas_Behemoth::slotAfterConsume(CardInfo *consumer, CardInfo *food) {//o
     int consumerPlayer = assets->whosePlayerRow(fromR);
     for (auto card:arachasBehemoths) {
         //spawn an arachas_hatchling on the rightmost of random ally row
-        int randomIndex = Begin + qrand() % (End - Begin + 1);
+        int randomIndex = Begin + assets->randint() % (End - Begin + 1);
         GameController::controller()->spawnCardToPosByPlayer(CardInfo::createByName("Arachas_Hatchling"), randomIndex,
                                                              assets->getCardArray(randomIndex).size(), consumerPlayer);
         GameController::controller()->damageFromSrcToDests(nullptr, {card}, 1, false);//ignore armor

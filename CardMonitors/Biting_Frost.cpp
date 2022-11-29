@@ -28,7 +28,7 @@ void Biting_Frost::slotOnTurnStart() {
             QList<CardInfo *> weakList;
             assets->updateRowWeakest(row, weakList, nullptr);
             if (!weakList.empty()) {
-                int randomIndex = qrand() % weakList.size();
+                int randomIndex = assets->randint() % weakList.size();
                 GameController::controller()->causeWeatherDamage(row, {weakList[randomIndex]}, 2, true);
             }
             //handle code end

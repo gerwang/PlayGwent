@@ -25,7 +25,7 @@ void Rally::slotOnDeploy(CardInfo *mover, int fromR, int toR) {
             }
         }
         if (!bronzeUnits.empty()) {
-            int randomIndex = qrand() % bronzeUnits.size();
+            int randomIndex = assets->randint() % bronzeUnits.size();
             CardInfo *randomCard = bronzeUnits[randomIndex];
 
             int targetPlayer = fromPlayer;
@@ -38,7 +38,7 @@ void Rally::slotOnDeploy(CardInfo *mover, int fromR, int toR) {
                 case CardInfo::Event: {
                     int Begin = assets->playerBattlefieldBegin(targetPlayer);
                     int End = assets->playerBattlefieldEnd(targetPlayer);
-                    targetRow = Begin + qrand() % (End - Begin + 1);
+                    targetRow = Begin + assets->randint() % (End - Begin + 1);
                     break;
                 }
                 case CardInfo::Melee:

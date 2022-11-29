@@ -218,7 +218,7 @@ GameController::performChooseCard(int candidateIndex, int seletedIndex, int supp
             } else {//WARNING: if some operation needs more than ONE choose and the player is offline, the game will STUCK!
                 command = Command::LeftClick;
                 row = candidateIndex;
-                column = qrand() % assets->getCardArray(candidateIndex).size();
+                column = assets->randint() % assets->getCardArray(candidateIndex).size();
             }
         }
 
@@ -291,7 +291,7 @@ void GameController::handleRedrawCard(int player) {//handle two players' redraw 
 
 void GameController::performRandomlyMoveAllCardsFromAToB(int fromR, int toR) {
     for (int fromC = assets->getCardArray(fromR).size() - 1; fromC >= 0; fromC--) {
-        int toC = qrand() % assets->getCardArray(toR).size();//must generate random number in order!
+        int toC = assets->randint() % assets->getCardArray(toR).size();//must generate random number in order!
         performMovePosToPos(fromR, fromC, toR, toC);
     }
 }
@@ -342,14 +342,14 @@ void GameController::setPlayerPassAndJudgeRoundEnd(int currentPlayer) {
             assets->setPlayerScore(player, currentRound, combatValue[player]);
         }
 
-        QString message = tr("Round") + QString::number(currentRound + 1);
+        QString message = tr("Round ") + QString::number(currentRound + 1) + tr(" ");
 
         if (combatValue[0] < combatValue[1]) {
             message += assets->getPlayerName(1) + tr(" Win!");
             assets->addPlayerWinRound(1);
             assets->setPreviousWinner(1);
         } else if (combatValue[0] == combatValue[1]) {
-            message += tr(" Draw!");
+            message += tr("Draw!");
             assets->setPreviousWinner(-1);//dummy value, draw
         } else if (combatValue[0] > combatValue[1]) {
             message += assets->getPlayerName(0) + tr(" Win!");
@@ -619,7 +619,7 @@ GameController::handleHandValidPosition(CardInfo *seletedCard, bool allowCancel,
             gameUI->execMessageBox(tr("Player timeout"), tr("%1 is timeout").arg(assets->getPlayerName(currentPlayer)),
                                    PlayerTimeoutDuration);
             command = Command::LeftClick;
-            int randomIndex = qrand() % validPositions.size();
+            int randomIndex = assets->randint() % validPositions.size();
             toR = validPositions[randomIndex].x();
             toC = validPositions[randomIndex].y();
         }
@@ -1072,7 +1072,7 @@ void GameController::startMainMenu() {
                             QMessageBox messageBox;
                             messageBox.setWindowTitle("Pending");
                             messageBox.setText("Waiting for the current turn to end.");
-                            messageBox.setStandardButtons(0);
+                            messageBox.setStandardButtons(QMessageBox::StandardButton::NoButton);
                             messageBox.show();
                             resumeFortune = network->readJsonObject();
                             messageBox.hide();
@@ -1178,7 +1178,7 @@ void GameController::start() {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Resuming game"));
         messageBox.setText("resuming game");
-        messageBox.setStandardButtons(0);
+        messageBox.setStandardButtons(QMessageBox::StandardButton::NoButton);
         messageBox.show();
         resumeFortune = network->readJsonObject();
         messageBox.hide();
@@ -1272,7 +1272,7 @@ bool GameController::getStartRoundInfo() {
 
 void GameController::randomlyMoveOneCardFromHandToGraveyard(int player) {
     const QList<CardInfo *> &hand = assets->getCardArray(assets->getHandIndex(player));
-    int randomIndex = qrand() % hand.size();
+    int randomIndex = assets->randint() % hand.size();
     int graveyardRow = (player == 0 ? Player0_Graveyard : Player1_Graveyard);
     moveCardToRightTop(hand.at(randomIndex), graveyardRow);
 }

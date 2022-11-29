@@ -7,6 +7,7 @@
 
 
 #include <QtCore/QObject>
+#include <QRandomGenerator>
 #include "CardInfo.h"
 #include "GameConstant.h"
 #include "Deck.h"
@@ -168,6 +169,8 @@ public:
 
     void setRoundStatus(int roundStatus);
 
+    int randint();
+
 private:
     //some psedu-local variable for game looping
     int roundStatus;
@@ -188,6 +191,7 @@ private:
     unsigned randomSeed;
     QString leaderName;
     CardInfo *leaderInfo;
+    QRandomGenerator randomGenerator;
 };
 
 

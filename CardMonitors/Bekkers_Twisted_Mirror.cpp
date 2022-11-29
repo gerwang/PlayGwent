@@ -61,7 +61,7 @@ void Bekkers_Twisted_Mirror::slotOnDeploy(CardInfo *mover, int fromR, int toR) {
             assets->updateRowWeakest(row, weakList, mover);
         }
         if (!strongList.empty()) {
-            int strongRandomIndex = qrand() % strongList.size();
+            int strongRandomIndex = assets->randint() % strongList.size();
             CardInfo *strongCard = strongList[strongRandomIndex];
             int nutrition = std::min(10, strongCard->getCurrentStrength());
             GameController::controller()->damageFromSrcToDests(mover, {strongCard}, nutrition, false);
@@ -72,7 +72,7 @@ void Bekkers_Twisted_Mirror::slotOnDeploy(CardInfo *mover, int fromR, int toR) {
                 }
             }
             if (!weakList.empty()) {
-                int weakRandomIndex = qrand() % weakList.size();
+                int weakRandomIndex = assets->randint() % weakList.size();
                 CardInfo *weakCard = weakList[weakRandomIndex];
                 GameController::controller()->boostFromSrcToDests(mover, {weakCard}, nutrition, 0);//0 armor
             }

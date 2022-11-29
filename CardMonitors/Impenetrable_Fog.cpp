@@ -28,7 +28,7 @@ void Impenetrable_Fog::slotOnTurnStart() {
             QList<CardInfo *> strongList;
             assets->updateRowStrongest(row, strongList, nullptr);
             if (!strongList.empty()) {
-                int randomIndex = qrand() % strongList.size();
+                int randomIndex = assets->randint() % strongList.size();
                 GameController::controller()->causeWeatherDamage(row, {strongList[randomIndex]}, 2, true);
             }
             //handle code end

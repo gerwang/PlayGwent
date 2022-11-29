@@ -28,11 +28,11 @@ void Torrential_Rain::slotOnTurnStart() {
             const QList<CardInfo *> &battlefield = assets->getCardArray(row);
             QList<CardInfo *> dests;
             if (!battlefield.empty()) {
-                int firstRandomIndex = qrand() % battlefield.size();
+                int firstRandomIndex = assets->randint() % battlefield.size();
                 dests.append(battlefield[firstRandomIndex]);
 
                 if (battlefield.size() > 1) {//has two
-                    int secondRandomIndex = qrand() % (battlefield.size() - 1);
+                    int secondRandomIndex = assets->randint() % (battlefield.size() - 1);
 
                     if (secondRandomIndex >= firstRandomIndex) {
                         secondRandomIndex++;// a math trick

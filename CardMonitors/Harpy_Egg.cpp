@@ -23,7 +23,7 @@ void Harpy_Egg::slotOnDeathWish(CardInfo *mover, int fromR, int toR) {
         int belongPlayer = assets->whosePlayerRow(fromR);//fromR is the battlefield row
         int Begin = assets->playerBattlefieldBegin(belongPlayer);
         int End = assets->playerBattlefieldEnd(belongPlayer);
-        int randomIndex = Begin + qrand() % (End - Begin + 1);
+        int randomIndex = Begin + assets->randint() % (End - Begin + 1);
         int endColumn = assets->getCardArray(randomIndex).size();
         GameController::controller()->spawnCardToPosByPlayer(
                 CardInfo::createByName("Harpy_Hatchling"), randomIndex, endColumn, belongPlayer);

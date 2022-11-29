@@ -28,7 +28,7 @@ void Roach::slotBeforeDeploy(CardInfo *mover, int fromR, int toR) {
                     End = assets->playerBattlefieldEnd(player);
             for (auto roach:allRoaches) {
                 //generate random index in [begin,end]
-                int randomIndex = Begin + qrand() % (End - Begin + 1);
+                int randomIndex = Begin + assets->randint() % (End - Begin + 1);
                 GameController::controller()->moveCardToRightTop(roach, randomIndex);
             }
         }

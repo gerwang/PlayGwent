@@ -124,7 +124,7 @@ void CardWidget::paintFront(QPainter *truePainter, const QStyleOptionGraphicsIte
         qreal infoStartHeight = front.height() + 20 + painter->fontMetrics().height();
         painter->setFont(QFont("Arial", 15, 50, false));
 
-        int totalWidth = painter->fontMetrics().width(cardinfo->infomation);
+        int totalWidth = painter->fontMetrics().horizontalAdvance(cardinfo->infomation);
         int lines = (totalWidth - 1) / front.width() + 1;//ceil
         int realHeight = painter->fontMetrics().lineSpacing() * lines;
 

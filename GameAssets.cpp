@@ -66,7 +66,7 @@ void GameAssets::setRandomSeed(unsigned int randomSeed) {
 }
 
 void GameAssets::resetRandomSeed() {
-    qsrand(randomSeed);
+    randomGenerator.seed(randomSeed);
 }
 
 int GameAssets::getPreviousWinner() const {
@@ -166,7 +166,7 @@ int GameAssets::findTopmostANameNotInB(const QList<CardInfo *> &a, const QList<C
 }
 
 bool GameAssets::listContainsName(const QList<CardInfo *> &list, const QString &name) {
-    for (auto info:list) {
+    for (auto info: list) {
         if (info->getCardName() == name) {
             return true;
         }
@@ -193,7 +193,7 @@ void GameAssets::setHandled(bool handled) {
 
 int GameAssets::getRowCombatValueSum(int row) {
     int sum = 0;
-    for (auto card:cardarray[row]) {
+    for (auto card: cardarray[row]) {
         sum += card->getCurrentStrength();
     }
     return sum;
@@ -232,7 +232,7 @@ void GameAssets::createCardsRandomlyOnNameListToRow(QList<QString> namelist, int
     //randomize
     int n = namelist.size();
     for (int index = 0; index < n; index++) {
-        int otherIndex = index + qrand() % (n - index);//range [index,n-1]
+        int otherIndex = index + randint() % (n - index);//range [index,n-1]
         std::swap(namelist[index], namelist[otherIndex]);//correct random algorithm
         cardarray[row].append(CardInfo::createByName(namelist[index]));//allocate NEW memory!
         //WARNING: FIND BUG: cardarray means &cardarray[0]!!
@@ -256,7 +256,7 @@ int GameAssets::getPlayerSiege(int player) {
 }
 
 void GameAssets::updateRowStrongest(int row, QList<CardInfo *> &result, CardInfo *exclude) {
-    for (auto info:cardarray[row]) {
+    for (auto info: cardarray[row]) {
         if (info == exclude) {
             continue;
         } else if (result.empty()) {
@@ -308,7 +308,7 @@ bool GameAssets::isCardOnBattlefield(CardInfo *card) {
 }
 
 void GameAssets::updateRowWeakest(int row, QList<CardInfo *> &result, CardInfo *exclude) {
-    for (auto info:cardarray[row]) {
+    for (auto info: cardarray[row]) {
         if (info == exclude) {
             continue;
         } else if (result.empty()) {
@@ -333,7 +333,7 @@ int GameAssets::getDeckTypeCount(int type) {
 void GameAssets::updateDeckTypeCount() {
     memset(deckTypeCount, 0, sizeof(deckTypeCount));
     for (int row = DeckBuilder_NoHP; row <= DeckBuilder_Melee_Event; row++) {
-        for (auto card:cardarray[row]) {
+        for (auto card: cardarray[row]) {
             deckTypeCount[card->getType()]++;//remeber the is not leader card in deck
         }
     }
@@ -398,7 +398,7 @@ void GameAssets::toJson(QJsonObject &json) {
     QJsonArray jsonCardArrays;
     for (int row = 0; row < ROW_NUM; row++) {
         QJsonArray jsonArray;
-        for (auto info:cardarray[row]) {
+        for (auto info: cardarray[row]) {
             QJsonObject infoObject;
             info->writeToJson(infoObject);
             jsonArray.append(infoObject);
@@ -511,6 +511,10 @@ int GameAssets::getRoundStatus() const {
 
 void GameAssets::setRoundStatus(int roundStatus) {
     GameAssets::roundStatus = roundStatus;
+}
+
+int GameAssets::randint() {
+    return randomGenerator.bounded((int) 1e9);
 }
 
 //you should always perform MOVE instead of REMOVE, case REMOVE is a really serios thing

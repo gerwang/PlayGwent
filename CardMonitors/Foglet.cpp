@@ -34,7 +34,7 @@ void Foglet::slotAfterWeatherChanged(int row, Weather oldWeather) {
         if (foundFoglet != nullptr) {//really found a foglet
             int Begin = assets->playerBattlefieldBegin(fogletPlayer);
             int End = assets->playerBattlefieldEnd(fogletPlayer);
-            int randomIndex = Begin + qrand() % (End - Begin + 1);
+            int randomIndex = Begin + assets->randint() % (End - Begin + 1);
             GameController::controller()->moveCardToRightTop(foundFoglet, randomIndex);
         }
     } else if (oldWeather == Weather::Foggy) {
