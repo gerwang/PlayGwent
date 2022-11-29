@@ -215,7 +215,7 @@ void CardInfo::setCD(int CD) {
 
 CardInfo *CardInfo::createByName(const QString &name) {
     auto info = new CardInfo();
-    QString filePath = QString("./assets/card_info/") + name + QString(".json");
+    QString filePath = QString(":assets/card_info/") + name + QString(".json");
     info->fromJsonFile(filePath);
     return info;
 }

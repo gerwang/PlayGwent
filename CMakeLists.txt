@@ -51,7 +51,7 @@ set(SOURCE_FILES
         AnimatedEllipse.cpp AnimatedEllipse.h
         AnimatedRect.cpp AnimatedRect.h
         AbstractOutputBuffer.h ScreenIOBuffer.cpp ScreenIOBuffer.h
-        TimeWidget.cpp TimeWidget.h)
+        TimeWidget.cpp TimeWidget.h resource.qrc)
 add_executable(PlayGwent ${SOURCE_FILES})
 
 target_link_libraries(PlayGwent Qt5::Widgets Qt5::Core Qt5::Network Qt5::OpenGL)

@@ -15,7 +15,7 @@
 const QPixmap &CardWidget::getPixmap(const QString &path) {
     static QMap<QString, QPixmap> resourceMap;
     if (!resourceMap.contains(path)) {
-        resourceMap.insert(path, QPixmap(path));
+        resourceMap.insert(path, QPixmap(":" + path));
     }
     return resourceMap[path];
 }

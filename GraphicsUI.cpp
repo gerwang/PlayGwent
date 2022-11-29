@@ -67,10 +67,10 @@ GraphicsUI::GraphicsUI() {
     view.show();
     currentScene = MainMenuScene;
 
-    background[0] = QPixmap("assets/background/mainmenu.png");
-    background[1] = QPixmap("assets/background/game.png");
-    background[2] = QPixmap("assets/background/deckbuilder.png");
-    background[3] = QPixmap("assets/background/mainmenu.png");
+    background[0] = QPixmap(":assets/background/mainmenu.png");
+    background[1] = QPixmap(":assets/background/game.png");
+    background[2] = QPixmap(":assets/background/deckbuilder.png");
+    background[3] = QPixmap(":assets/background/mainmenu.png");
 
     focusWidget = nullptr;
     spiritWidget = nullptr;
@@ -94,9 +94,9 @@ GraphicsUI::GraphicsUI() {
     QPalette palette;
     palette.setColor(QPalette::ButtonText, QColor(201, 199, 197));
     for (int i = 0; i < BUTTON_NUM; i++) {
-        pushButton[i].setStyleSheet("QPushButton {border-image: url(assets/ui/menu_inactive2.tex.png)}"
-                                    "QPushButton:hover{border-image:url(assets/ui/menu_active2.tex.png)}"
-                                    "QPushButton:pressed{border-image:url(assets/ui/menu_hit2.tex.png)}");
+        pushButton[i].setStyleSheet("QPushButton {border-image: url(:assets/ui/menu_inactive2.tex.png)}"
+                                    "QPushButton:hover{border-image:url(:assets/ui/menu_active2.tex.png)}"
+                                    "QPushButton:pressed{border-image:url(:assets/ui/menu_hit2.tex.png)}");
         pushButton[i].setFont(QFont("Arial", 16, 80, false));
         pushButton[i].setPalette(palette);
         pushButton[i].setText(ButtonText[i]);
@@ -133,8 +133,8 @@ GraphicsUI::GraphicsUI() {
     cardArrays[Main_Menu].setRenderInfo(true);
 
     coinWidget = new CardWidget;
-    coinWidget->setFront(QPixmap("assets/ui/timer-icon_player.tex.png"));
-    coinWidget->setBack(QPixmap("assets/ui/timer-icon_enemy.tex.png"));
+    coinWidget->setFront(QPixmap(":assets/ui/timer-icon_player.tex.png"));
+    coinWidget->setBack(QPixmap(":assets/ui/timer-icon_enemy.tex.png"));
     coinWidget->setRenderFlag(0);
     coinWidget->setPos(SceneOriginPoint[AbstractUI::GameScene] + QPointF(115, 392));
     coinWidget->setWidth(110);
