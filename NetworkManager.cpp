@@ -38,7 +38,7 @@ void NetworkManager::slotOnNetWorkErrorQuit() {
 }
 
 NetworkManager::NetworkManager() {
-    connect(&socket, static_cast<void (QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::errorOccurred), this,
+    connect(&socket, static_cast<void (QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error), this,
             &NetworkManager::slotOnNetWorkErrorQuit);
 }
 
