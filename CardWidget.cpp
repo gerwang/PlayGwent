@@ -116,7 +116,7 @@ void CardWidget::paintFront(QPainter *truePainter, const QStyleOptionGraphicsIte
     }
 
     if (renderFlag & DrawInfo) {
-        painter->setFont(QFont("Arial", 20, 100, false));
+        painter->setFont(QFont("Arial", 15, 100, false));
         painter->setPen(QColor(209, 209, 208));
         painter->drawText(QRectF(0, front.height() + 10, front.width(), 84), Qt::AlignHCenter, cardinfo->cardName);
         painter->drawPixmap(0, front.height() + 10, divider.scaled(divider.width(), painter->fontMetrics().height()));

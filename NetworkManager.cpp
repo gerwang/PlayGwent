@@ -67,7 +67,9 @@ int NetworkManager::login(const QString &username, const QString &password) {
 
 void NetworkManager::logout() {
     socket.disconnectFromHost();
-    socket.waitForDisconnected();
+    if (socket.state() != QAbstractSocket::SocketState::UnconnectedState) {
+        socket.waitForDisconnected();
+    }
 }
 
 void NetworkManager::getUserInput(Command &command, int &row, int &column) {

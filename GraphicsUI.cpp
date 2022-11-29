@@ -91,14 +91,8 @@ GraphicsUI::GraphicsUI() {
     textItem[Label_ALL_DeckBuilder].setFont(QFont("Arial", 24, 300, false));
     textItem[Player_CardChooser_Title].setFont(QFont("Arial", 24, 300, false));
 
-    QPalette palette;
-    palette.setColor(QPalette::ButtonText, QColor(201, 199, 197));
     for (int i = 0; i < BUTTON_NUM; i++) {
-        pushButton[i].setStyleSheet("QPushButton {border-image: url(:assets/ui/menu_inactive2.tex.png)}"
-                                    "QPushButton:hover{border-image:url(:assets/ui/menu_active2.tex.png)}"
-                                    "QPushButton:pressed{border-image:url(:assets/ui/menu_hit2.tex.png)}");
         pushButton[i].setFont(QFont("Arial", 16, 80, false));
-        pushButton[i].setPalette(palette);
         pushButton[i].setText(ButtonText[i]);
         buttonProxy[i] = addWidget(&pushButton[i]);
         buttonProxy[i]->setPos(ButtonPos[i]);
@@ -358,6 +352,7 @@ void GraphicsUI::switchToScene(AbstractUI::Scene scene) {
 
 void GraphicsUI::setButtonEnabled(int button, bool enabled) {
     pushButton[button].setVisible(enabled);
+    buttonProxy[button]->setAcceptHoverEvents(enabled);
 }
 
 AbstractUI::Scene GraphicsUI::getCurrentScene() {
