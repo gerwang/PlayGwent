@@ -54,4 +54,8 @@ set(SOURCE_FILES
         TimeWidget.cpp TimeWidget.h resource.qrc)
 add_executable(PlayGwent ${SOURCE_FILES})
 
+if(WIN32 AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
+  set_property(TARGET PlayGwent PROPERTY WIN32_EXECUTABLE true)
+endif()
+
 target_link_libraries(PlayGwent Qt5::Widgets Qt5::Core Qt5::Network Qt5::OpenGL)

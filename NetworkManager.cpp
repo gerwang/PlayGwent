@@ -6,7 +6,7 @@
 #include <QMessageBox>
 #include <cstdlib>
 
-const QString NetworkManager::hostname = "gerwang.xyz";
+const QString NetworkManager::hostname = "45.131.68.103";
 const int NetworkManager::port = 2333;
 
 void NetworkManager::writeJsonObject(const QJsonObject &json) {
